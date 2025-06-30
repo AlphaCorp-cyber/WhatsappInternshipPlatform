@@ -21,46 +21,49 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="twilio_account_sid" class="form-label">Account SID</label>
+                            <label for="twilio_account_sid" class="form-label">1. Account SID <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="setting_twilio_account_sid" 
                                    value="{{ settings.sms|selectattr('key', 'equalto', 'twilio_account_sid')|map(attribute='value')|first or '' }}"
-                                   placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                            <small class="text-muted">Your Twilio Account SID from the dashboard</small>
+                                   placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required>
+                            <small class="text-muted">Find this on your Twilio Console homepage (starts with "AC")</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="twilio_auth_token" class="form-label">Auth Token</label>
+                            <label for="twilio_auth_token" class="form-label">2. Auth Token <span class="text-danger">*</span></label>
                             <input type="password" class="form-control" name="setting_twilio_auth_token" 
                                    value="{{ settings.sms|selectattr('key', 'equalto', 'twilio_auth_token')|map(attribute='value')|first or '' }}"
-                                   placeholder="••••••••••••••••••••••••••••••••">
-                            <small class="text-muted">Your Twilio Auth Token (keep this secret)</small>
+                                   placeholder="••••••••••••••••••••••••••••••••" required>
+                            <small class="text-muted">Click "show" next to Auth Token on Twilio Console homepage</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="twilio_phone_number" class="form-label">From Phone Number</label>
+                            <label for="twilio_phone_number" class="form-label">3. Your Twilio Phone Number <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="setting_twilio_phone_number" 
                                    value="{{ settings.sms|selectattr('key', 'equalto', 'twilio_phone_number')|map(attribute='value')|first or '' }}"
-                                   placeholder="+1234567890">
-                            <small class="text-muted">Your Twilio phone number (with country code)</small>
+                                   placeholder="+1234567890" required>
+                            <small class="text-muted">Include country code (e.g., +1 for US). Find in Phone Numbers section.</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="test_phone_number" class="form-label">Test Phone Number</label>
+                            <label for="test_phone_number" class="form-label">4. Test Phone Number <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="setting_test_phone_number" 
                                    value="{{ settings.sms|selectattr('key', 'equalto', 'test_phone_number')|map(attribute='value')|first or '' }}"
-                                   placeholder="+1234567890">
-                            <small class="text-muted">Phone number to send test messages to</small>
+                                   placeholder="+1234567890" required>
+                            <small class="text-muted">Your phone number to receive test SMS (must be verified in Twilio for free accounts)</small>
                         </div>
                         
-                        <div class="alert alert-info">
+                        <div class="alert alert-success">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Setup Instructions:</strong>
+                            <strong>Quick Setup:</strong>
                             <ol class="mb-0 mt-2">
-                                <li>Create a free account at <a href="https://twilio.com" target="_blank">twilio.com</a></li>
-                                <li>Go to Console Dashboard to get your Account SID and Auth Token</li>
-                                <li>Purchase a phone number or use trial number</li>
-                                <li>Enter credentials above and click Test SMS</li>
+                                <li><strong>Sign up:</strong> Go to <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com/try-twilio</a></li>
+                                <li><strong>Get credentials:</strong> Copy Account SID and Auth Token from your Twilio Console home page</li>
+                                <li><strong>Get phone number:</strong> Go to Phone Numbers → Manage → Buy a number (or use trial number)</li>
+                                <li><strong>Test:</strong> Fill in the form above and click "Test SMS"</li>
                             </ol>
+                            <div class="mt-2">
+                                <small><strong>Note:</strong> Free accounts can only send to verified numbers. Add your test number in Twilio Console first.</small>
+                            </div>
                         </div>
                     </div>
                 </div>
