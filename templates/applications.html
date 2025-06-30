@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Applications - WhatsApp Internship System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-users me-2"></i>Applications</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('export_applications') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" 
+               class="btn btn-outline-primary">
+                <i class="fas fa-download me-1"></i>Export CSV
+            </a>
+            <a href="{{ url_for('export_applications', format='zip') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" 
+               class="btn btn-outline-success">
+                <i class="fas fa-file-archive me-1"></i>Export ZIP
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="internship_id" class="form-label">Internship</label>
+                    <select class="form-select" id="internship_id" name="internship_id">
+                        <option value="">All Internships</option>
+                        {% for internship in internships %}
+                            <option value="{{ internship.id }}" 
+                                    {% if current_internship_id == internship.id %}selected{% endif %}>
+                                {{ internship.title }} ({{ internship.position_code }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="shortlisted" {% if current_status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                        <option value="selected" {% if current_status == 'selected' %}selected{% endif %}>Selected</option>
+                        <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Name, email, or phone" value="{{ search }}">
+                </div>
+                
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>Filter
+                    </button>
+                    <a href="{{ url_for('applications') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if applications.items %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Internship</th>
+                                <th>Contact</th>
+                                <th>Applied</th>
+                                <th>Status</th>
+                                <th>CV</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for application in applications.items %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ application.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ application.email }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        {{ application.internship.title }}
+                                        <br>
+                                        <small class="text-muted">{{ application.internship.position_code }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <i class="fas fa-phone me-1"></i>{{ application.phone_number }}
+                                        <br>
+                                        <i class="fab fa-whatsapp me-1"></i>{{ application.whatsapp_number }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ application.applied_at.strftime('%Y-%m-%d') }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ application.applied_at.strftime('%H:%M') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if application.status == 'selected' else 'warning' if application.status == 'pending' else 'info' if application.status == 'shortlisted' else 'danger' }}">
+                                        {{ application.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if application.cv_filename %}
+                                        <i class="fas fa-file-pdf text-success"></i>
+                                        <small>{{ application.cv_original_filename }}</small>
+                                    {% else %}
+                                        <span class="text-muted">No CV</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('application_detail', id=application.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if applications.pages > 1 %}
+        <nav aria-label="Applications pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if applications.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('applications', page=applications.prev_num, **request.args) }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in applications.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != applications.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('applications', page=page_num, **request.args) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if applications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('applications', page=applications.next_num, **request.args) }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h3>No Applications Found</h3>
+            <p class="text-muted">
+                {% if request.args %}
+                    No applications match your current filters. Try adjusting your search criteria.
+                {% else %}
+                    No applications have been submitted yet.
+                {% endif %}
+            </p>
+            {% if request.args %}
+                <a href="{{ url_for('applications') }}" class="btn btn-primary">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

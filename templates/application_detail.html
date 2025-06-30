@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Application Details - WhatsApp Internship System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-user me-2"></i>Application Details</h1>
+        <a href="{{ url_for('applications') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Applications
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Applicant Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Applicant Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Personal Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Full Name:</strong></td>
+                                    <td>{{ application.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>
+                                        <a href="mailto:{{ application.email }}">{{ application.email }}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ application.phone_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>WhatsApp:</strong></td>
+                                    <td>{{ application.whatsapp_number }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Application Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Applied:</strong></td>
+                                    <td>{{ application.applied_at.strftime('%d %B %Y, %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if application.status == 'selected' else 'warning' if application.status == 'pending' else 'info' if application.status == 'shortlisted' else 'danger' }}">
+                                            {{ application.status.title() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Updated:</strong></td>
+                                    <td>{{ application.updated_at.strftime('%d %B %Y, %H:%M') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Internship Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Internship Applied For</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ application.internship.title }}</h6>
+                    <p class="text-muted mb-2">Position Code: <span class="font-monospace">{{ application.internship.position_code }}</span></p>
+                    <p>{{ application.internship.description }}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Requirements:</strong>
+                            <p class="text-muted">{{ application.internship.requirements }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Application Deadline:</strong>
+                            <p class="text-muted">{{ application.internship.deadline.strftime('%d %B %Y, %H:%M') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cover Letter -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Cover Letter / Motivation</h5>
+                </div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap;">{{ application.cover_letter }}</p>
+                </div>
+            </div>
+            
+            <!-- CV Section -->
+            {% if application.cv_filename %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Curriculum Vitae</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-pdf fa-2x text-danger me-3"></i>
+                        <div>
+                            <h6 class="mb-1">{{ application.cv_original_filename }}</h6>
+                            <small class="text-muted">Uploaded: {{ application.applied_at.strftime('%d %B %Y, %H:%M') }}</small>
+                        </div>
+                        <div class="ms-auto">
+                            <a href="{{ url_for('static', filename='uploads/' + application.cv_filename) }}" 
+                               class="btn btn-outline-primary" target="_blank">
+                                <i class="fas fa-download me-1"></i>Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-4">
+                <div class="card-body text-center text-muted">
+                    <i class="fas fa-file-times fa-2x mb-2"></i>
+                    <p>No CV uploaded</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_application_status', id=application.id) }}">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Update Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                <option value="selected" {% if application.status == 'selected' %}selected{% endif %}>Selected</option>
+                                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="send_notification" name="send_notification" checked>
+                                <label class="form-check-label" for="send_notification">
+                                    Send notification to applicant
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-1"></i>Update Status
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="mailto:{{ application.email }}" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope me-1"></i>Send Email
+                        </a>
+                        
+                        <a href="https://wa.me/{{ application.whatsapp_number.replace('+', '') }}" 
+                           class="btn btn-outline-success" target="_blank">
+                            <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                        </a>
+                        
+                        <a href="tel:{{ application.phone_number }}" class="btn btn-outline-info">
+                            <i class="fas fa-phone me-1"></i>Call
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Communication History -->
+            {% if application.notifications %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Communication History</h5>
+                </div>
+                <div class="card-body">
+                    {% for notification in application.notifications %}
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            {% if notification.channel == 'whatsapp' %}
+                                <i class="fab fa-whatsapp text-success"></i>
+                            {% elif notification.channel == 'email' %}
+                                <i class="fas fa-envelope text-primary"></i>
+                            {% elif notification.channel == 'sms' %}
+                                <i class="fas fa-sms text-info"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">{{ notification.channel.title() }}</small>
+                                <small class="text-muted">{{ notification.created_at.strftime('%m/%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1 small">{{ notification.message[:100] }}{% if notification.message|length > 100 %}...{% endif %}</p>
+                            <span class="badge bg-{{ 'success' if notification.status == 'sent' else 'danger' }}">
+                                {{ notification.status.title() }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
