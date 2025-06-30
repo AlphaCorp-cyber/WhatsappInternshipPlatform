@@ -507,6 +507,84 @@ def create_default_admin():
         db.session.commit()
         print("Default admin user created: username=admin, password=admin123")
 
+# Admin account management routes
+@app.route('/account')
+@login_required
+def account_settings():
+    """Show admin account settings page"""
+    return render_template('account_settings.html', admin=current_user)
+
+@app.route('/account/update', methods=['POST'])
+@login_required
+def update_account():
+    """Update admin account details"""
+    try:
+        # Update basic info
+        if 'username' in request.form:
+            new_username = request.form['username'].strip()
+            if new_username != current_user.username:
+                # Check if username is already taken
+                existing_admin = Admin.query.filter_by(username=new_username).first()
+                if existing_admin and existing_admin.id != current_user.id:
+                    flash('Username already exists', 'danger')
+                    return redirect(url_for('account_settings'))
+                current_user.username = new_username
+        
+        if 'email' in request.form:
+            new_email = request.form['email'].strip().lower()
+            if new_email != current_user.email:
+                # Check if email is already taken
+                existing_admin = Admin.query.filter_by(email=new_email).first()
+                if existing_admin and existing_admin.id != current_user.id:
+                    flash('Email already exists', 'danger')
+                    return redirect(url_for('account_settings'))
+                current_user.email = new_email
+        
+        db.session.commit()
+        flash('Account details updated successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating account: {str(e)}', 'danger')
+    
+    return redirect(url_for('account_settings'))
+
+@app.route('/account/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Change admin password"""
+    try:
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        
+        # Verify current password
+        if not current_user.check_password(current_password):
+            flash('Current password is incorrect', 'danger')
+            return redirect(url_for('account_settings'))
+        
+        # Check if new passwords match
+        if new_password != confirm_password:
+            flash('New passwords do not match', 'danger')
+            return redirect(url_for('account_settings'))
+        
+        # Check password length
+        if len(new_password) < 6:
+            flash('Password must be at least 6 characters long', 'danger')
+            return redirect(url_for('account_settings'))
+        
+        # Update password
+        current_user.set_password(new_password)
+        db.session.commit()
+        
+        flash('Password changed successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error changing password: {str(e)}', 'danger')
+    
+    return redirect(url_for('account_settings'))
+
 # Call the function when the module is loaded
 with app.app_context():
     try:
