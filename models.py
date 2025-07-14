@@ -79,12 +79,12 @@ class Application(db.Model):
     __tablename__ = 'applications'
     
     id = db.Column(db.Integer, primary_key=True)
-    internship_id = db.Column(db.Integer, db.ForeignKey('internships.id'), nullable=False)
-    full_name = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
-    whatsapp_number = db.Column(db.String(20), nullable=False)
-    cover_letter = db.Column(db.Text, nullable=False)
+    internship_id = db.Column(db.Integer, db.ForeignKey('internships.id'), nullable=True)  # Allow null during conversation
+    full_name = db.Column(db.String(200), nullable=True)  # Allow null during conversation
+    email = db.Column(db.String(120), nullable=True)  # Allow null during conversation  
+    phone_number = db.Column(db.String(20), nullable=True)  # Allow null during conversation
+    whatsapp_number = db.Column(db.String(20), nullable=False)  # Always required
+    cover_letter = db.Column(db.Text, nullable=True)  # Allow null during conversation
     cv_filename = db.Column(db.String(255))
     cv_original_filename = db.Column(db.String(255))
     status = db.Column(db.String(20), default='pending')  # pending, shortlisted, selected, rejected

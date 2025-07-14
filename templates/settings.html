@@ -242,6 +242,33 @@
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             <strong>Important:</strong> After updating settings, test each communication channel to ensure they're working properly.
                         </div>
+                        
+                        <!-- WhatsApp Bot Testing -->
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fab fa-whatsapp me-2"></i>Test WhatsApp Bot</h6>
+                            </div>
+                            <div class="card-body">
+                                <form action="{{ url_for('test_whatsapp_bot') }}" method="POST" class="d-inline">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <input type="text" class="form-control" name="from_number" 
+                                                   value="+1234567890" placeholder="Test phone number">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input type="text" class="form-control" name="message_text" 
+                                                   value="APPLY HLEB0H PXEI8387" placeholder="Test message">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm mt-2">
+                                        <i class="fas fa-robot me-1"></i>Test Bot Response
+                                    </button>
+                                </form>
+                                <small class="text-muted d-block mt-1">
+                                    This simulates a WhatsApp message to test the bot logic without needing actual WhatsApp API connection.
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

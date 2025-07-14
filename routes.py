@@ -346,8 +346,8 @@ def export_applications_zip(applications):
 @app.route('/webhook/whatsapp', methods=['GET', 'POST'])
 def whatsapp_webhook():
     if request.method == 'GET':
-        # Webhook verification
-        verify_token = os.environ.get('WHATSAPP_VERIFY_TOKEN', 'your_verify_token')
+        # Webhook verification - get from system settings
+        verify_token = SystemSettings.get_setting('whatsapp_verify_token') or os.environ.get('WHATSAPP_VERIFY_TOKEN', 'your_verify_token')
         
         if request.args.get('hub.verify_token') == verify_token:
             return request.args.get('hub.challenge')
@@ -357,11 +357,64 @@ def whatsapp_webhook():
         # Handle incoming messages
         try:
             data = request.get_json()
-            whatsapp_handler.handle_webhook(data)
+            current_app.logger.info(f"=== WHATSAPP WEBHOOK RECEIVED ===")
+            current_app.logger.info(f"Raw data: {data}")
+            current_app.logger.info(f"Request headers: {dict(request.headers)}")
+            
+            # Import here to avoid circular imports
+            from whatsapp_handler import handle_webhook
+            handle_webhook(data)
             return 'OK', 200
         except Exception as e:
             current_app.logger.error(f"Error processing WhatsApp webhook: {e}")
+            import traceback
+            current_app.logger.error(f"Traceback: {traceback.format_exc()}")
             return 'Error', 500
+
+@app.route('/test-whatsapp', methods=['POST'])
+@login_required
+def test_whatsapp_bot():
+    """Test WhatsApp bot functionality with simulated message"""
+    try:
+        # Get test data from form
+        from_number = request.form.get('from_number', '+1234567890')
+        message_text = request.form.get('message_text', 'APPLY HLEB0H PXEI8387')
+        
+        # Create simulated webhook data
+        simulated_data = {
+            'entry': [{
+                'changes': [{
+                    'field': 'messages',
+                    'value': {
+                        'messages': [{
+                            'id': f'test_msg_{datetime.now().timestamp()}',
+                            'from': from_number,
+                            'timestamp': str(int(datetime.now().timestamp())),
+                            'type': 'text',
+                            'text': {
+                                'body': message_text
+                            }
+                        }]
+                    }
+                }]
+            }]
+        }
+        
+        current_app.logger.info(f"Testing WhatsApp bot with simulated data: {simulated_data}")
+        
+        # Import and process
+        from whatsapp_handler import handle_webhook
+        handle_webhook(simulated_data)
+        
+        flash(f'Test message processed: "{message_text}" from {from_number}', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in WhatsApp test: {e}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        flash(f'Error testing WhatsApp bot: {str(e)}', 'danger')
+    
+    return redirect(url_for('settings'))
 
 # Settings management routes
 @app.route('/settings')

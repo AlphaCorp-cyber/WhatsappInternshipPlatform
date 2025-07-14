@@ -98,7 +98,42 @@ This is a Flask-based web application that allows users to apply for internships
 
 Preferred communication style: Simple, everyday language.
 
+## WhatsApp Bot Status
+
+### ✅ Bot Logic Working
+The WhatsApp bot conversation logic is **fully functional**:
+- Message processing and webhook handling ✅
+- Application creation and state management ✅ 
+- Internship code validation ✅
+- Multi-step conversation flow ✅
+
+### 🔧 Setup Required for Live WhatsApp
+To receive real WhatsApp messages, you need:
+
+1. **Facebook Developer Account Setup**:
+   - Create app at developers.facebook.com
+   - Add WhatsApp Business API product
+   - Get Access Token and Phone Number ID
+
+2. **Webhook Configuration**:
+   - Set webhook URL to: `https://your-replit-url.replit.app/webhook/whatsapp`
+   - Configure verify token in Settings page
+   - Subscribe to message events
+
+3. **Credentials Configuration**:
+   - Go to Settings page in admin dashboard
+   - Enter WhatsApp Access Token
+   - Enter Phone Number ID  
+   - Set verify token
+
+### 🧪 Testing Options
+- Use "Test Bot Response" button in Settings page
+- Simulates real WhatsApp messages without API setup
+- Tests the complete conversation flow
+
 ## Changelog
 
-Changelog:
-- June 30, 2025. Initial setup
+- July 14, 2025: WhatsApp bot logic completed and tested
+- July 14, 2025: Settings management system added  
+- July 14, 2025: Multi-channel communication system implemented
+- June 30, 2025: Initial setup

@@ -56,10 +56,13 @@ def handle_incoming_message(message):
         message_type = message.get('type', 'text')
         
         # Store message in database
+        from models import SystemSettings
+        to_number = SystemSettings.get_setting('whatsapp_phone_number_id') or os.environ.get('WHATSAPP_NUMBER', 'system')
+        
         whatsapp_msg = WhatsAppMessage(
             message_id=message_id,
             from_number=from_number,
-            to_number=os.environ.get('WHATSAPP_NUMBER'),
+            to_number=to_number,
             message_type=message_type,
             received_at=datetime.fromtimestamp(int(timestamp))
         )
