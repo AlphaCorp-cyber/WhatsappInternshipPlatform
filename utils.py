@@ -81,17 +81,26 @@ def save_media_file(media_url, file_type):
 
 def format_phone_number(phone_number):
     """Format phone number for international use"""
-    # Remove all non-digit characters
-    cleaned = ''.join(filter(str.isdigit, phone_number))
+    # Handle different input formats
+    if phone_number.startswith('whatsapp:'):
+        phone_number = phone_number.replace('whatsapp:', '')
+    if phone_number.startswith('whatsapp+'):
+        phone_number = phone_number.replace('whatsapp+', '+')
     
-    # Add country code if missing (assuming Zimbabwe +263)
-    if not cleaned.startswith('263') and not cleaned.startswith('1'):
-        # Remove leading zero if present
-        if cleaned.startswith('0'):
-            cleaned = cleaned[1:]
-        cleaned = '263' + cleaned
+    # Remove all non-digit characters except +
+    cleaned = ''.join(c for c in phone_number if c.isdigit() or c == '+')
     
-    return '+' + cleaned
+    # Ensure it starts with +
+    if not cleaned.startswith('+'):
+        # Add country code if missing (assuming Zimbabwe +263)
+        if not cleaned.startswith('263') and not cleaned.startswith('1'):
+            # Remove leading zero if present
+            if cleaned.startswith('0'):
+                cleaned = cleaned[1:]
+            cleaned = '263' + cleaned
+        cleaned = '+' + cleaned
+    
+    return cleaned
 
 def generate_qr_code(text):
     """Generate QR code for sharing (optional feature)"""

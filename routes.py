@@ -402,8 +402,9 @@ def whatsapp_webhook():
             
             # Convert Twilio format to our internal format
             if 'From' in data:
-                # Extract phone number (remove 'whatsapp:' prefix)
-                from_number = data['From'].replace('whatsapp:', '')
+                # Extract phone number and format properly
+                from utils import format_phone_number
+                from_number = format_phone_number(data['From'])
                 message_sid = data.get('MessageSid', 'unknown')
                 
                 # Check if it's a media message

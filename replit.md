@@ -149,6 +149,7 @@ To receive real WhatsApp messages via Twilio, you need:
 - 📲 **WhatsApp Share Links:** Auto-generated wa.me links with pre-filled APPLY messages
 - 📄 **Full Content Sharing:** Complete description and requirements included in share messages
 - 🔧 **Webhook Fix:** Resolved Twilio Error 12200 with proper text/plain responses
+- 📞 **Phone Number Fix:** Resolved Error 21211 with proper E164 phone number formatting
 
 ## Changelog
 

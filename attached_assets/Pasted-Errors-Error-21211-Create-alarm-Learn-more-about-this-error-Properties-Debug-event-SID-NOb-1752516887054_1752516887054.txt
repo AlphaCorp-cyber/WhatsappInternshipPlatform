@@ -1,0 +1,40 @@
+Errors
+Error - 21211
+Create alarm
+Learn more about this error
+Properties
+Debug event SID
+
+NObfebf42a10c90c6e767f2230c0b00efb
+
+Service SID
+
+--
+
+Resource SID
+
+SM597df927cc28c67bc62e28dee398620d
+
+Timestamp
+
+6:12pm UTC 2025-Jul-14
+
+Message
+
+Error Description
+You attempted to initiate an outbound phone call or send a message, but the `To` phone number you supplied was not a valid phone number or was incorrectly formatted. Twilio accepts phone numbers in [E164 format](http://en.wikipedia.org/wiki/E.164): `[+] [country code] [subscriber number including area code]`.
+
+Possible Solutions
+Ensure you have formatted your phone numbers in E164 format: [+] [country code] [subscriber number including area code].
+Ensure you have used the correct country calling code for the phone number you are calling.
+Ensure you are not attempting to call or message from a Twilio number to itself.
+Ensure you are not attempting to send messages to Short Codes or Alphanumeric Sender IDs. These sender types cannot receive messages from Twilio numbers.
+Review the 'To' number for any typos or incorrect input methods.
+If you are using a third party integration, test your API request in the Try it out section of the Twilio console. If this is successful, you may need to contact the third party to ensure they are not making unexpected changes to your To parameter.
+When sending messages using a Messaging Service, instead of formatting a To number with an invalid prefix, remove the prefix and send directly to the To number using E164 format: [+] [country code] [subscriber number including area code]. If the To number is able to accept RCS messages and there is an RCS Agent available in the Messaging Service Sender Pool, it will be selected to send to the given To number.
+Possible Causes
+The formatting of the To number you supplied was invalid.
+You attempted to send a message or place a call from a Twilio number to itself (i.e. putting the same Twilio number in the To and From parameters).
+You attempted to send a message to Short Code.
+You attempted to send a message to an Alphanumeric Sender ID.
+You attempted to send a message to a To number with an invalid prefix using a Messaging Service.
