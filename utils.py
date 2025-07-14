@@ -30,6 +30,20 @@ def save_media_file(media_url, file_type):
             'Authorization': f'Bearer {access_token}'
         }
         
+        # For Twilio WhatsApp API, we need to handle authentication differently
+        if 'twilio.com' in media_url:
+            # Use Twilio account credentials
+            from twilio.rest import Client
+            twilio_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+            twilio_token = os.environ.get('TWILIO_AUTH_TOKEN')
+            
+            if twilio_sid and twilio_token:
+                import base64
+                credentials = base64.b64encode(f"{twilio_sid}:{twilio_token}".encode()).decode()
+                headers = {
+                    'Authorization': f'Basic {credentials}'
+                }
+        
         response = requests.get(media_url, headers=headers)
         if response.status_code != 200:
             raise Exception(f"Failed to download media: {response.status_code}")

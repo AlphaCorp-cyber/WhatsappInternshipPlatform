@@ -136,7 +136,8 @@ To receive real WhatsApp messages via Twilio, you need:
 
 ## Changelog
 
-- July 14, 2025: PDF-only document system with in-browser viewing
+- July 14, 2025: PDF-only document system with in-browser viewing and automatic file download
+- July 14, 2025: Fixed PDF upload recognition and CV file storage system
 - July 14, 2025: Streamlined application process - name, email + CV upload for speed
 - July 14, 2025: Enhanced WhatsApp bot messages with emojis, welcome screen, and position details
 - July 14, 2025: Document upload hint added for university/college cover letters

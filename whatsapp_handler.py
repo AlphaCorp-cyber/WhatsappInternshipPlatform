@@ -322,9 +322,28 @@ def process_media_message(application, whatsapp_msg, from_number):
             )
             return
         
-        # Store PDF with proper extension
-        filename = f"cv_{application.id}_{whatsapp_msg.message_id}.pdf"
-        original_filename = "CV_attachment.pdf"
+        # Download and store the PDF file
+        try:
+            import requests
+            from utils import save_media_file
+            
+            # Download the media file
+            filename, original_filename = save_media_file(media_url, 'pdf')
+            
+            if not filename:
+                send_whatsapp_message(
+                    from_number,
+                    "Error downloading your CV. Please try uploading again."
+                )
+                return
+                
+        except Exception as e:
+            logger.error(f"Error downloading media file: {e}")
+            send_whatsapp_message(
+                from_number,
+                "Error downloading your CV. Please try uploading again."
+            )
+            return
         
         # Complete the application with collected data
         temp_data = application.temp_data or {}
