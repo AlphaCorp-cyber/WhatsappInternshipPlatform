@@ -70,9 +70,11 @@ class Internship(db.Model):
         
         return f"""🎯 **{self.title}** - Apply Now!
 
-📝 **Description:** {self.description[:100]}...
+📝 **Description:** 
+{self.description}
 
-✅ **Requirements:** {self.requirements[:100]}...
+✅ **Requirements:** 
+{self.requirements}
 
 📅 **Deadline:** {self.deadline.strftime('%B %d, %Y')}
 
