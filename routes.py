@@ -8,12 +8,35 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 from app import app, db
+import os
 from models import Admin, Internship, Application, NotificationLog, SystemSettings
 from utils import allowed_file, save_uploaded_file
 from communication import send_whatsapp_message, send_email, send_sms
 import whatsapp_handler
 
 # Authentication routes
+@app.route('/health')
+def health_check():
+    """Health check endpoint for deployment verification"""
+    try:
+        # Test database connection
+        admin_count = Admin.query.count()
+        internship_count = Internship.query.count()
+        
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'admins': admin_count,
+            'internships': internship_count,
+            'version': '1.0.0',
+            'webhook_url': f"{request.url_root}webhook/whatsapp"
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
