@@ -153,7 +153,7 @@ def process_text_message(application, message_body, from_number):
         # If they send text instead of file, remind them
         send_whatsapp_message(
             from_number,
-            "Please attach your CV as a PDF, Word document, or image file.\n\n💡 Tip: If you have a cover letter from your university or college, please include it with your CV document."
+            "📎 Please attach your **CV** as a PDF, Word document, or image file.\n\n💡 **Tip:** If you have a cover letter from your university or college, please include it with your CV document."
         )
 
 def handle_apply_command(application, message_body, from_number):
@@ -163,7 +163,7 @@ def handle_apply_command(application, message_body, from_number):
     if len(parts) < 3 or parts[0] != 'APPLY':
         send_whatsapp_message(
             from_number,
-            "To apply for an internship, please send:\nAPPLY [POSITION_CODE] [SECRET_CODE]\n\nExample: APPLY WD001 SECRET123"
+            "🚀 **Welcome to our Internship Application System!**\n\n📝 To apply for an internship, please send:\n**APPLY [POSITION_CODE] [SECRET_CODE]**\n\n💡 **Example:** APPLY WD001 SECRET123\n\n🔍 Make sure you have the correct codes from the job posting!"
         )
         return
     
@@ -212,7 +212,7 @@ def handle_apply_command(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        f"✅ Great! You're applying for: {internship.title}\n\nLet's get started with your application.\n\nPlease provide your full name:"
+        f"🎉 Welcome to our Internship Application System!\n\n📋 **Position:** {internship.title}\n💼 **Company:** {internship.admin.username if internship.admin else 'Our Company'}\n⏰ **Deadline:** {internship.deadline.strftime('%B %d, %Y')}\n\n✨ Great! Let's get started with your application.\n\n👤 Please provide your **full name**:"
     )
 
 def handle_name_input(application, message_body, from_number):
@@ -231,7 +231,7 @@ def handle_name_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        "Perfect! Now please provide your email address:"
+        f"✅ Perfect {temp_data['full_name']}! \n\n📧 Now please provide your **email address**:"
     )
 
 def handle_email_input(application, message_body, from_number):
@@ -253,7 +253,7 @@ def handle_email_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        "Great! Now please provide your phone number:"
+        "📧 Great! Email received.\n\n📱 Now please provide your **phone number**:"
     )
 
 def handle_phone_input(application, message_body, from_number):
@@ -274,7 +274,7 @@ def handle_phone_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        "Perfect! Now please write a short cover letter or motivation message (why you want this internship):"
+        "📱 Perfect! Phone number saved.\n\n💬 Now please write a short **cover letter or motivation message** (tell us why you want this internship):"
     )
 
 def handle_cover_letter_input(application, message_body, from_number):
@@ -293,7 +293,7 @@ def handle_cover_letter_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        "Excellent! Finally, please attach your CV as a PDF, Word document, or image file.\n\n💡 Tip: If you have a cover letter from your university or college, please include it with your CV document."
+        "📝 Excellent! Your motivation is noted.\n\n📎 **Final Step:** Please attach your **CV** as a PDF, Word document, or image file.\n\n💡 **Tip:** If you have a cover letter from your university or college, please include it with your CV document."
     )
 
 def process_media_message(application, whatsapp_msg, from_number):
@@ -327,7 +327,7 @@ def process_media_message(application, whatsapp_msg, from_number):
         
         send_whatsapp_message(
             from_number,
-            f"🎉 Application submitted successfully!\n\nYour application for {internship.title} has been received. You will be notified about the status via WhatsApp, email, or SMS.\n\nThank you for applying!"
+            f"🎉 **APPLICATION SUBMITTED SUCCESSFULLY!** 🎉\n\n📋 **Position:** {internship.title}\n👤 **Applicant:** {application.full_name}\n📧 **Email:** {application.email}\n📱 **Phone:** {application.phone_number}\n📎 **CV:** Received ✅\n\n🔔 You will be notified about your application status via WhatsApp, email, or SMS.\n\n🙏 **Thank you for applying!** We appreciate your interest and will review your application carefully.\n\n🤞 Good luck!"
         )
         
         # Send confirmation email if possible

@@ -136,6 +136,7 @@ To receive real WhatsApp messages via Twilio, you need:
 
 ## Changelog
 
+- July 14, 2025: Enhanced WhatsApp bot messages with emojis, welcome screen, and position details
 - July 14, 2025: Document upload hint added for university/college cover letters
 - July 14, 2025: WhatsApp bot logic completed and tested
 - July 14, 2025: Settings management system added  
