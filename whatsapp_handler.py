@@ -74,21 +74,30 @@ def handle_incoming_message(message):
         elif message_type in ['image', 'document']:
             # Handle Twilio media format
             media_url = message.get('media_url')
+            media_content_type = message.get('media_content_type', '')
+            
             if media_url:
                 whatsapp_msg.media_url = media_url
+                whatsapp_msg.media_content_type = media_content_type
                 message_body = f"[{message_type.upper()}_ATTACHMENT]"
                 whatsapp_msg.message_body = message_body
             else:
                 # Handle Facebook API format
                 media_id = None
+                mime_type = ''
                 if message_type == 'image':
-                    media_id = message.get('image', {}).get('id')
+                    image_data = message.get('image', {})
+                    media_id = image_data.get('id')
+                    mime_type = image_data.get('mime_type', '')
                 elif message_type == 'document':
-                    media_id = message.get('document', {}).get('id')
+                    document_data = message.get('document', {})
+                    media_id = document_data.get('id')
+                    mime_type = document_data.get('mime_type', '')
                 
                 if media_id:
                     media_url = get_media_url(media_id)
                     whatsapp_msg.media_url = media_url
+                    whatsapp_msg.media_content_type = mime_type
                     message_body = f"[{message_type.upper()}_ATTACHMENT]"
                     whatsapp_msg.message_body = message_body
         
