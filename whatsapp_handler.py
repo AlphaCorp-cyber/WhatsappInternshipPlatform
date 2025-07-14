@@ -145,10 +145,6 @@ def process_text_message(application, message_body, from_number):
         handle_name_input(application, message_body, from_number)
     elif state == STATE_WAITING_FOR_EMAIL:
         handle_email_input(application, message_body, from_number)
-    elif state == STATE_WAITING_FOR_PHONE:
-        handle_phone_input(application, message_body, from_number)
-    elif state == STATE_WAITING_FOR_COVER_LETTER:
-        handle_cover_letter_input(application, message_body, from_number)
     elif state == STATE_WAITING_FOR_CV:
         # If they send text instead of file, remind them
         send_whatsapp_message(
@@ -205,14 +201,14 @@ def handle_apply_command(application, message_body, from_number):
         )
         return
     
-    # Start application process - skip to CV upload
+    # Start application process with name first
     application.internship_id = internship.id
-    application.conversation_state = STATE_WAITING_FOR_CV
+    application.conversation_state = STATE_WAITING_FOR_NAME
     application.temp_data = {'internship_id': internship.id}
     
     send_whatsapp_message(
         from_number,
-        f"🎉 Welcome! You're applying for: **{internship.title}**\n⏰ Deadline: {internship.deadline.strftime('%B %d, %Y')}\n\n📎 **Quick Process:** Just send your CV/resume and we'll extract your details from it.\n\nPlease attach your CV as PDF, Word document, or image:"
+        f"🎉 Welcome! You're applying for: **{internship.title}**\n⏰ Deadline: {internship.deadline.strftime('%B %d, %Y')}\n\n⚡ **Quick Process:** Just 3 steps!\n\n👤 First, please provide your **full name**:"
     )
 
 def handle_name_input(application, message_body, from_number):
@@ -231,7 +227,7 @@ def handle_name_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        f"✅ Perfect {temp_data['full_name']}! \n\n📧 Now please provide your **email address**:"
+        f"✅ Perfect {temp_data['full_name']}! \n\n📧 **Step 2:** Please provide your **email address**:"
     )
 
 def handle_email_input(application, message_body, from_number):
@@ -249,11 +245,11 @@ def handle_email_input(application, message_body, from_number):
     temp_data = application.temp_data or {}
     temp_data['email'] = email
     application.temp_data = temp_data
-    application.conversation_state = STATE_WAITING_FOR_PHONE
+    application.conversation_state = STATE_WAITING_FOR_CV
     
     send_whatsapp_message(
         from_number,
-        "📧 Great! Email received.\n\n📱 Now please provide your **phone number**:"
+        "📧 Great! Email received.\n\n📎 **Final Step:** Please attach your **CV** as PDF, Word document, or image:"
     )
 
 def handle_phone_input(application, message_body, from_number):
@@ -311,11 +307,11 @@ def process_media_message(application, whatsapp_msg, from_number):
         filename = f"cv_{application.id}_{whatsapp_msg.message_id}.jpg"
         original_filename = "CV_attachment.jpg"
         
-        # Complete the application with CV only
+        # Complete the application with collected data
         temp_data = application.temp_data or {}
         
-        application.full_name = 'Details in CV'
-        application.email = f'cv_applicant_{application.id}@pending.com'
+        application.full_name = temp_data.get('full_name', 'Name from CV')
+        application.email = temp_data.get('email', f'applicant_{application.id}@pending.com')
         application.phone_number = from_number
         application.cover_letter = 'Please see attached CV for details'
         application.cv_filename = filename
@@ -327,7 +323,7 @@ def process_media_message(application, whatsapp_msg, from_number):
         
         send_whatsapp_message(
             from_number,
-            f"🎉 **APPLICATION COMPLETE!**\n\n📋 Position: {internship.title}\n📎 CV: Received ✅\n📱 Phone: {application.phone_number}\n\n✅ Done! We'll review your CV and contact you via WhatsApp.\n\n🤞 Good luck!"
+            f"🎉 **APPLICATION COMPLETE!**\n\n📋 Position: {internship.title}\n👤 Name: {application.full_name}\n📧 Email: {application.email}\n📎 CV: Received ✅\n\n✅ Done! We'll review your application and contact you.\n\n🤞 Good luck!"
         )
         
         # Send confirmation email if possible
