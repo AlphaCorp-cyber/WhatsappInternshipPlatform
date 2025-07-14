@@ -153,7 +153,7 @@ def process_text_message(application, message_body, from_number):
         # If they send text instead of file, remind them
         send_whatsapp_message(
             from_number,
-            "📎 Please attach your **CV** as a PDF, Word document, or image file.\n\n💡 **Tip:** If you have a cover letter from your university or college, please include it with your CV document."
+            "📎 Please attach your **CV** as a PDF, Word document, or image file to complete your application."
         )
 
 def handle_apply_command(application, message_body, from_number):
@@ -205,14 +205,14 @@ def handle_apply_command(application, message_body, from_number):
         )
         return
     
-    # Start application process
+    # Start application process - skip to CV upload
     application.internship_id = internship.id
-    application.conversation_state = STATE_WAITING_FOR_NAME
+    application.conversation_state = STATE_WAITING_FOR_CV
     application.temp_data = {'internship_id': internship.id}
     
     send_whatsapp_message(
         from_number,
-        f"🎉 Welcome to our Internship Application System!\n\n📋 **Position:** {internship.title}\n💼 **Company:** {internship.admin.username if internship.admin else 'Our Company'}\n⏰ **Deadline:** {internship.deadline.strftime('%B %d, %Y')}\n\n✨ Great! Let's get started with your application.\n\n👤 Please provide your **full name**:"
+        f"🎉 Welcome! You're applying for: **{internship.title}**\n⏰ Deadline: {internship.deadline.strftime('%B %d, %Y')}\n\n📎 **Quick Process:** Just send your CV/resume and we'll extract your details from it.\n\nPlease attach your CV as PDF, Word document, or image:"
     )
 
 def handle_name_input(application, message_body, from_number):
@@ -311,13 +311,13 @@ def process_media_message(application, whatsapp_msg, from_number):
         filename = f"cv_{application.id}_{whatsapp_msg.message_id}.jpg"
         original_filename = "CV_attachment.jpg"
         
-        # Complete the application
+        # Complete the application with CV only
         temp_data = application.temp_data or {}
         
-        application.full_name = temp_data.get('full_name', 'Unknown')
-        application.email = temp_data.get('email', 'unknown@example.com')
-        application.phone_number = temp_data.get('phone_number', from_number)
-        application.cover_letter = temp_data.get('cover_letter', '')
+        application.full_name = 'Details in CV'
+        application.email = f'cv_applicant_{application.id}@pending.com'
+        application.phone_number = from_number
+        application.cover_letter = 'Please see attached CV for details'
         application.cv_filename = filename
         application.cv_original_filename = original_filename
         application.conversation_state = STATE_COMPLETED
@@ -327,7 +327,7 @@ def process_media_message(application, whatsapp_msg, from_number):
         
         send_whatsapp_message(
             from_number,
-            f"🎉 **APPLICATION SUBMITTED SUCCESSFULLY!** 🎉\n\n📋 **Position:** {internship.title}\n👤 **Applicant:** {application.full_name}\n📧 **Email:** {application.email}\n📱 **Phone:** {application.phone_number}\n📎 **CV:** Received ✅\n\n🔔 You will be notified about your application status via WhatsApp, email, or SMS.\n\n🙏 **Thank you for applying!** We appreciate your interest and will review your application carefully.\n\n🤞 Good luck!"
+            f"🎉 **APPLICATION COMPLETE!**\n\n📋 Position: {internship.title}\n📎 CV: Received ✅\n📱 Phone: {application.phone_number}\n\n✅ Done! We'll review your CV and contact you via WhatsApp.\n\n🤞 Good luck!"
         )
         
         # Send confirmation email if possible
