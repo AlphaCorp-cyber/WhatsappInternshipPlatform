@@ -64,10 +64,25 @@ class Internship(db.Model):
     
     def get_share_message(self, whatsapp_number):
         """Generate share message for the internship"""
-        return f"""🚀 {self.title} ({self.position_code})
-Requirements: {self.requirements}
-Deadline: {self.deadline.strftime('%d %B %Y')}
-To apply: Send "APPLY {self.position_code} {self.secret_code}" to {whatsapp_number} via WhatsApp"""
+        # Create WhatsApp link with pre-filled message
+        apply_message = f"APPLY {self.position_code} {self.secret_code}"
+        whatsapp_link = f"https://wa.me/{whatsapp_number.replace('+', '')}?text={apply_message.replace(' ', '%20')}"
+        
+        return f"""🎯 **{self.title}** - Apply Now!
+
+📝 **Description:** {self.description[:100]}...
+
+✅ **Requirements:** {self.requirements[:100]}...
+
+📅 **Deadline:** {self.deadline.strftime('%B %d, %Y')}
+
+🚀 **Apply via WhatsApp:**
+{whatsapp_link}
+
+Or send manually: APPLY {self.position_code} {self.secret_code}
+To: {whatsapp_number}
+
+#internship #jobs #opportunity"""
     
     def is_deadline_passed(self):
         return datetime.utcnow() > self.deadline

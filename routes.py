@@ -162,7 +162,8 @@ def deactivate_internship(id):
 @login_required
 def get_share_message(id):
     internship = Internship.query.get_or_404(id)
-    whatsapp_number = os.environ.get('WHATSAPP_NUMBER', '+1234567890')
+    # Use live WhatsApp number from system settings
+    whatsapp_number = SystemSettings.get_setting('twilio_whatsapp_number', '+16056050396')
     share_message = internship.get_share_message(whatsapp_number)
     
     return jsonify({'message': share_message})
