@@ -408,7 +408,8 @@ def whatsapp_webhook():
                                             'id': message_sid,
                                             'mime_type': media_content_type,
                                         } if 'document' in media_content_type else None,
-                                        'media_url': media_url
+                                        'media_url': media_url,
+                                        'media_content_type': media_content_type
                                     }]
                                 }
                             }]
