@@ -101,6 +101,12 @@ def handle_incoming_message(message):
                     message_body = f"[{message_type.upper()}_ATTACHMENT]"
                     whatsapp_msg.message_body = message_body
         
+        # Check for duplicate message ID
+        existing_msg = WhatsAppMessage.query.filter_by(message_id=message_id).first()
+        if existing_msg:
+            logger.info(f"Message {message_id} already processed, skipping duplicate")
+            return
+        
         db.session.add(whatsapp_msg)
         
         # Find or create application record for this number
