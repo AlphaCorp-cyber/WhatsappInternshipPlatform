@@ -33,8 +33,9 @@ def send_whatsapp_message(to_number, message, application_id=None):
             )
             return False
         
-        # Use sandbox number for reliable messaging
-        from_number = "whatsapp:+14155238886" 
+        # Use live WhatsApp number or fallback to sandbox
+        live_number = SystemSettings.get_setting('twilio_whatsapp_number', '+14155238886')
+        from_number = f"whatsapp:{live_number}" 
         to_whatsapp = f"whatsapp:{to_number}"
         
         client = Client(account_sid, auth_token)

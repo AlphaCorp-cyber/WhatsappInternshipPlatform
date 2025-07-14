@@ -143,6 +143,7 @@ To receive real WhatsApp messages via Twilio, you need:
   - Admin dashboard with CV viewing
   - Multi-step conversation flow
 - ✅ Ready for live Twilio deployment
+- 📱 **Live WhatsApp Number:** +16056050396 (configured)
 
 ## Changelog
 
