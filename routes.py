@@ -188,6 +188,24 @@ def application_detail(id):
     application = Application.query.get_or_404(id)
     return render_template('application_detail.html', application=application)
 
+@app.route('/applications/<int:id>/cv')
+@login_required
+def view_cv(id):
+    """View application CV document"""
+    application = Application.query.get_or_404(id)
+    if not application.cv_filename:
+        flash('No CV file found for this application', 'warning')
+        return redirect(url_for('application_detail', id=id))
+    
+    cv_path = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), application.cv_filename)
+    if not os.path.exists(cv_path):
+        flash('CV file not found on disk', 'error')
+        return redirect(url_for('application_detail', id=id))
+    
+    # Check if download is requested
+    download = request.args.get('download') == '1'
+    return send_file(cv_path, as_attachment=download, download_name=application.cv_original_filename or 'cv.pdf')
+
 @app.route('/applications/<int:id>/update_status', methods=['POST'])
 @login_required
 def update_application_status(id):

@@ -108,6 +108,7 @@ class WhatsAppMessage(db.Model):
     message_body = db.Column(db.Text)
     message_type = db.Column(db.String(20), default='text')  # text, image, document
     media_url = db.Column(db.String(500))
+    media_content_type = db.Column(db.String(100))  # MIME type for media files
     status = db.Column(db.String(20), default='received')  # received, processed, failed
     received_at = db.Column(db.DateTime, default=datetime.utcnow)
     processed_at = db.Column(db.DateTime)

@@ -149,7 +149,7 @@ def process_text_message(application, message_body, from_number):
         # If they send text instead of file, remind them
         send_whatsapp_message(
             from_number,
-            "📎 Please attach your **CV** as a PDF, Word document, or image file to complete your application."
+            "📎 Please attach your **CV as a PDF document only** to complete your application."
         )
 
 def handle_apply_command(application, message_body, from_number):
@@ -249,7 +249,7 @@ def handle_email_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        "📧 Great! Email received.\n\n📎 **Final Step:** Please attach your **CV** as PDF, Word document, or image:"
+        "📧 Great! Email received.\n\n📎 **Final Step:** Please attach your **CV as a PDF document only**:"
     )
 
 def handle_phone_input(application, message_body, from_number):
@@ -296,16 +296,26 @@ def process_media_message(application, whatsapp_msg, from_number):
     """Process media attachment (CV)"""
     try:
         media_url = getattr(whatsapp_msg, 'media_url', None)
-        if not media_url:
+        media_content_type = getattr(whatsapp_msg, 'media_content_type', None)
+        
+        # Only accept PDF documents
+        if not media_content_type or 'pdf' not in media_content_type.lower():
             send_whatsapp_message(
                 from_number,
-                "Error processing your file. Please try uploading again."
+                "❌ Please upload a PDF document only. Other file types are not accepted."
             )
             return
         
-        # For now, just mark as received since we have the media URL
-        filename = f"cv_{application.id}_{whatsapp_msg.message_id}.jpg"
-        original_filename = "CV_attachment.jpg"
+        if not media_url:
+            send_whatsapp_message(
+                from_number,
+                "Error processing your PDF file. Please try uploading again."
+            )
+            return
+        
+        # Store PDF with proper extension
+        filename = f"cv_{application.id}_{whatsapp_msg.message_id}.pdf"
+        original_filename = "CV_attachment.pdf"
         
         # Complete the application with collected data
         temp_data = application.temp_data or {}

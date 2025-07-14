@@ -4,7 +4,7 @@ import requests
 from werkzeug.utils import secure_filename
 from flask import current_app
 
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'pdf'}
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
