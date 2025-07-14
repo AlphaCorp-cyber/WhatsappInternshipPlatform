@@ -359,31 +359,64 @@ def whatsapp_webhook():
             current_app.logger.info(f"Request headers: {dict(request.headers)}")
             
             # Convert Twilio format to our internal format
-            if 'From' in data and 'Body' in data:
+            if 'From' in data:
                 # Extract phone number (remove 'whatsapp:' prefix)
                 from_number = data['From'].replace('whatsapp:', '')
-                message_body = data['Body']
                 message_sid = data.get('MessageSid', 'unknown')
                 
-                # Create WhatsApp message format for our handler
-                converted_data = {
-                    'entry': [{
-                        'changes': [{
-                            'field': 'messages',
-                            'value': {
-                                'messages': [{
-                                    'id': message_sid,
-                                    'from': from_number,
-                                    'timestamp': str(int(datetime.now().timestamp())),
-                                    'type': 'text',
-                                    'text': {
-                                        'body': message_body
-                                    }
-                                }]
-                            }
+                # Check if it's a media message
+                num_media = int(data.get('NumMedia', 0))
+                
+                if num_media > 0:
+                    # Handle media message (image, document, etc.)
+                    media_url = data.get('MediaUrl0', '')
+                    media_content_type = data.get('MediaContentType0', '')
+                    
+                    converted_data = {
+                        'entry': [{
+                            'changes': [{
+                                'field': 'messages',
+                                'value': {
+                                    'messages': [{
+                                        'id': message_sid,
+                                        'from': from_number,
+                                        'timestamp': str(int(datetime.now().timestamp())),
+                                        'type': 'image' if 'image' in media_content_type else 'document',
+                                        'image': {
+                                            'id': message_sid,
+                                            'mime_type': media_content_type,
+                                        } if 'image' in media_content_type else None,
+                                        'document': {
+                                            'id': message_sid,
+                                            'mime_type': media_content_type,
+                                        } if 'document' in media_content_type else None,
+                                        'media_url': media_url
+                                    }]
+                                }
+                            }]
                         }]
-                    }]
-                }
+                    }
+                else:
+                    # Handle text message
+                    message_body = data.get('Body', '')
+                    converted_data = {
+                        'entry': [{
+                            'changes': [{
+                                'field': 'messages',
+                                'value': {
+                                    'messages': [{
+                                        'id': message_sid,
+                                        'from': from_number,
+                                        'timestamp': str(int(datetime.now().timestamp())),
+                                        'type': 'text',
+                                        'text': {
+                                            'body': message_body
+                                        }
+                                    }]
+                                }
+                            }]
+                        }]
+                    }
                 
                 # Import and process
                 from whatsapp_handler import handle_webhook

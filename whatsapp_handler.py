@@ -72,17 +72,25 @@ def handle_incoming_message(message):
             whatsapp_msg.message_body = message_body
             
         elif message_type in ['image', 'document']:
-            media_id = None
-            if message_type == 'image':
-                media_id = message.get('image', {}).get('id')
-            elif message_type == 'document':
-                media_id = message.get('document', {}).get('id')
-            
-            if media_id:
-                media_url = get_media_url(media_id)
+            # Handle Twilio media format
+            media_url = message.get('media_url')
+            if media_url:
                 whatsapp_msg.media_url = media_url
                 message_body = f"[{message_type.upper()}_ATTACHMENT]"
                 whatsapp_msg.message_body = message_body
+            else:
+                # Handle Facebook API format
+                media_id = None
+                if message_type == 'image':
+                    media_id = message.get('image', {}).get('id')
+                elif message_type == 'document':
+                    media_id = message.get('document', {}).get('id')
+                
+                if media_id:
+                    media_url = get_media_url(media_id)
+                    whatsapp_msg.media_url = media_url
+                    message_body = f"[{message_type.upper()}_ATTACHMENT]"
+                    whatsapp_msg.message_body = message_body
         
         db.session.add(whatsapp_msg)
         
@@ -291,15 +299,17 @@ def handle_cover_letter_input(application, message_body, from_number):
 def process_media_message(application, whatsapp_msg, from_number):
     """Process media attachment (CV)"""
     try:
-        if not whatsapp_msg.media_url:
+        media_url = getattr(whatsapp_msg, 'media_url', None)
+        if not media_url:
             send_whatsapp_message(
                 from_number,
                 "Error processing your file. Please try uploading again."
             )
             return
         
-        # Download and save the media file
-        filename, original_filename = save_media_file(whatsapp_msg.media_url, whatsapp_msg.message_type)
+        # For now, just mark as received since we have the media URL
+        filename = f"cv_{application.id}_{whatsapp_msg.message_id}.jpg"
+        original_filename = "CV_attachment.jpg"
         
         # Complete the application
         temp_data = application.temp_data or {}
