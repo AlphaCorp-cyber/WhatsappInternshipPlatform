@@ -148,6 +148,7 @@ To receive real WhatsApp messages via Twilio, you need:
 - 🔧 **Deployment Ready:** Procfile, error handlers, and production logging configured
 - 📲 **WhatsApp Share Links:** Auto-generated wa.me links with pre-filled APPLY messages
 - 📄 **Full Content Sharing:** Complete description and requirements included in share messages
+- 🔧 **Webhook Fix:** Resolved Twilio Error 12200 with proper text/plain responses
 
 ## Changelog
 

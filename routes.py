@@ -389,7 +389,7 @@ def export_applications_zip(applications):
 def whatsapp_webhook():
     if request.method == 'GET':
         # For Twilio, this is typically not used, but keep for compatibility
-        return 'Webhook endpoint ready', 200
+        return 'Webhook endpoint ready', 200, {'Content-Type': 'text/plain'}
     
     elif request.method == 'POST':
         # Handle incoming Twilio WhatsApp messages
@@ -465,12 +465,13 @@ def whatsapp_webhook():
                 from whatsapp_handler import handle_webhook
                 handle_webhook(converted_data)
             
-            return 'OK', 200
+            # Return empty response for WhatsApp webhooks (no TwiML needed)
+            return '', 200, {'Content-Type': 'text/plain'}
         except Exception as e:
             current_app.logger.error(f"Error processing Twilio WhatsApp webhook: {e}")
             import traceback
             current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-            return 'Error', 500
+            return 'Error', 500, {'Content-Type': 'text/plain'}
 
 @app.route('/test-whatsapp', methods=['POST'])
 @login_required
