@@ -13,16 +13,15 @@ logger = logging.getLogger(__name__)
 def send_whatsapp_message(to_number, message, application_id=None):
     """Send WhatsApp message using Twilio WhatsApp API"""
     try:
+        import os
         from twilio.rest import Client
         
-        # Get credentials from system settings first, fallback to environment variables
-        account_sid = SystemSettings.get_setting('twilio_account_sid') or os.environ.get('TWILIO_ACCOUNT_SID')
-        auth_token = SystemSettings.get_setting('twilio_auth_token') or os.environ.get('TWILIO_AUTH_TOKEN')
-        from_whatsapp = SystemSettings.get_setting('twilio_whatsapp_number') or os.environ.get('TWILIO_WHATSAPP_NUMBER')
+        # Force use environment variables directly
+        account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+        auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
         
-        if not account_sid or not auth_token or not from_whatsapp:
-            logger.error("Twilio WhatsApp credentials not configured")
-            # For now, log the message that would be sent for debugging
+        if not account_sid or not auth_token:
+            logger.error("Twilio credentials not found in environment")
             logger.info(f"WhatsApp message (would send to {to_number}): {message}")
             log_notification(
                 application_id=application_id,
@@ -34,8 +33,8 @@ def send_whatsapp_message(to_number, message, application_id=None):
             )
             return False
         
-        # Format numbers for Twilio WhatsApp API
-        from_number = f"whatsapp:{from_whatsapp}"
+        # Use sandbox number for reliable messaging
+        from_number = "whatsapp:+14155238886" 
         to_whatsapp = f"whatsapp:{to_number}"
         
         client = Client(account_sid, auth_token)

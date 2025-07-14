@@ -82,9 +82,9 @@
                         <div class="mb-3">
                             <label for="twilio_whatsapp_number" class="form-label">Twilio WhatsApp Number</label>
                             <input type="text" class="form-control" name="setting_twilio_whatsapp_number" 
-                                   value="{{ settings.whatsapp|selectattr('key', 'equalto', 'twilio_whatsapp_number')|map(attribute='value')|first or '' }}"
+                                   value="{{ settings.whatsapp|selectattr('key', 'equalto', 'twilio_whatsapp_number')|map(attribute='value')|first or '+14155238886' }}"
                                    placeholder="+14155238886">
-                            <small class="text-muted">Your Twilio WhatsApp-enabled phone number</small>
+                            <small class="text-muted">For sandbox: +14155238886. For production: your approved WhatsApp Business number</small>
                         </div>
                         
                         <div class="mb-3">
