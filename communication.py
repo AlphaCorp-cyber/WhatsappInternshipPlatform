@@ -22,6 +22,16 @@ def send_whatsapp_message(to_number, message, application_id=None):
         
         if not account_sid or not auth_token or not from_whatsapp:
             logger.error("Twilio WhatsApp credentials not configured")
+            # For now, log the message that would be sent for debugging
+            logger.info(f"WhatsApp message (would send to {to_number}): {message}")
+            log_notification(
+                application_id=application_id,
+                channel='whatsapp',
+                recipient=to_number,
+                message=message,
+                status='pending',
+                error_message='Credentials not configured'
+            )
             return False
         
         # Format numbers for Twilio WhatsApp API
@@ -48,6 +58,8 @@ def send_whatsapp_message(to_number, message, application_id=None):
             
     except Exception as e:
         logger.error(f"Error sending WhatsApp message via Twilio: {e}")
+        # For debugging, log what message would be sent
+        logger.info(f"WhatsApp message (failed to send to {to_number}): {message}")
         log_notification(
             application_id=application_id,
             channel='whatsapp',
