@@ -153,7 +153,7 @@ def process_text_message(application, message_body, from_number):
         # If they send text instead of file, remind them
         send_whatsapp_message(
             from_number,
-            "Please attach your CV as a PDF, Word document, or image file."
+            "Please attach your CV as a PDF, Word document, or image file.\n\n💡 Tip: If you have a cover letter from your university or college, please include it with your CV document."
         )
 
 def handle_apply_command(application, message_body, from_number):
@@ -293,7 +293,7 @@ def handle_cover_letter_input(application, message_body, from_number):
     
     send_whatsapp_message(
         from_number,
-        "Excellent! Finally, please attach your CV as a PDF, Word document, or image file."
+        "Excellent! Finally, please attach your CV as a PDF, Word document, or image file.\n\n💡 Tip: If you have a cover letter from your university or college, please include it with your CV document."
     )
 
 def process_media_message(application, whatsapp_msg, from_number):
