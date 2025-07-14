@@ -107,24 +107,24 @@ The WhatsApp bot conversation logic is **fully functional**:
 - Internship code validation ✅
 - Multi-step conversation flow ✅
 
-### 🔧 Setup Required for Live WhatsApp
-To receive real WhatsApp messages, you need:
+### 🔧 Setup Required for Live WhatsApp (Twilio)
+To receive real WhatsApp messages via Twilio, you need:
 
-1. **Facebook Developer Account Setup**:
-   - Create app at developers.facebook.com
-   - Add WhatsApp Business API product
-   - Get Access Token and Phone Number ID
+1. **Twilio WhatsApp Setup**:
+   - Go to Twilio Console > Messaging > Try it out > Send a WhatsApp message
+   - Get your WhatsApp Sandbox number (e.g., +14155238886)
+   - Configure credentials in environment variables
 
 2. **Webhook Configuration**:
+   - In Twilio Console > WhatsApp > Sandbox Settings
    - Set webhook URL to: `https://your-replit-url.replit.app/webhook/whatsapp`
-   - Configure verify token in Settings page
-   - Subscribe to message events
+   - HTTP POST method
 
-3. **Credentials Configuration**:
-   - Go to Settings page in admin dashboard
-   - Enter WhatsApp Access Token
-   - Enter Phone Number ID  
-   - Set verify token
+3. **Current Status**:
+   - ✅ Twilio credentials configured (Account SID, Auth Token, WhatsApp Number)
+   - ✅ WhatsApp message sending via Twilio API
+   - ✅ Webhook handler converted to Twilio format
+   - 🔧 Webhook URL needs to be configured in Twilio Console
 
 ### 🧪 Testing Options
 - Use "Test Bot Response" button in Settings page

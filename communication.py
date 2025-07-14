@@ -11,59 +11,43 @@ from email.mime.multipart import MIMEMultipart
 logger = logging.getLogger(__name__)
 
 def send_whatsapp_message(to_number, message, application_id=None):
-    """Send WhatsApp message using WhatsApp Business API"""
+    """Send WhatsApp message using Twilio WhatsApp API"""
     try:
-        # Get credentials from system settings first, fallback to environment variables
-        access_token = SystemSettings.get_setting('whatsapp_access_token') or os.environ.get('WHATSAPP_ACCESS_TOKEN')
-        phone_number_id = SystemSettings.get_setting('whatsapp_phone_number_id') or os.environ.get('WHATSAPP_PHONE_NUMBER_ID')
+        from twilio.rest import Client
         
-        if not access_token or not phone_number_id:
-            logger.error("WhatsApp credentials not configured in system settings")
+        # Get credentials from system settings first, fallback to environment variables
+        account_sid = SystemSettings.get_setting('twilio_account_sid') or os.environ.get('TWILIO_ACCOUNT_SID')
+        auth_token = SystemSettings.get_setting('twilio_auth_token') or os.environ.get('TWILIO_AUTH_TOKEN')
+        from_whatsapp = SystemSettings.get_setting('twilio_whatsapp_number') or os.environ.get('TWILIO_WHATSAPP_NUMBER')
+        
+        if not account_sid or not auth_token or not from_whatsapp:
+            logger.error("Twilio WhatsApp credentials not configured")
             return False
         
-        url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
+        # Format numbers for Twilio WhatsApp API
+        from_number = f"whatsapp:{from_whatsapp}"
+        to_whatsapp = f"whatsapp:{to_number}"
         
-        headers = {
-            'Authorization': f'Bearer {access_token}',
-            'Content-Type': 'application/json'
-        }
+        client = Client(account_sid, auth_token)
         
-        # Format phone number (remove + if present, ensure it starts with country code)
-        formatted_number = to_number.replace('+', '').replace(' ', '').replace('-', '')
-        if not formatted_number.startswith('1') and not formatted_number.startswith('263'):
-            # Assume local number, add default country code
-            formatted_number = '263' + formatted_number.lstrip('0')
+        message_obj = client.messages.create(
+            body=message,
+            from_=from_number,
+            to=to_whatsapp
+        )
         
-        payload = {
-            'messaging_product': 'whatsapp',
-            'to': formatted_number,
-            'type': 'text',
-            'text': {
-                'body': message
-            }
-        }
-        
-        response = requests.post(url, json=payload, headers=headers)
-        
-        # Log the notification
+        logger.info(f"WhatsApp message sent successfully to {to_number}, SID: {message_obj.sid}")
         log_notification(
             application_id=application_id,
             channel='whatsapp',
             recipient=to_number,
             message=message,
-            status='sent' if response.status_code == 200 else 'failed',
-            error_message=response.text if response.status_code != 200 else None
+            status='sent'
         )
-        
-        if response.status_code == 200:
-            logger.info(f"WhatsApp message sent to {to_number}")
-            return True
-        else:
-            logger.error(f"Failed to send WhatsApp message: {response.text}")
-            return False
+        return True
             
     except Exception as e:
-        logger.error(f"Error sending WhatsApp message: {e}")
+        logger.error(f"Error sending WhatsApp message via Twilio: {e}")
         log_notification(
             application_id=application_id,
             channel='whatsapp',

@@ -80,27 +80,17 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="whatsapp_access_token" class="form-label">Access Token</label>
-                            <input type="password" class="form-control" name="setting_whatsapp_access_token" 
-                                   value="{{ settings.whatsapp|selectattr('key', 'equalto', 'whatsapp_access_token')|map(attribute='value')|first or '' }}"
-                                   placeholder="••••••••••••••••••••••••••••••••">
-                            <small class="text-muted">WhatsApp Business API Access Token</small>
+                            <label for="twilio_whatsapp_number" class="form-label">Twilio WhatsApp Number</label>
+                            <input type="text" class="form-control" name="setting_twilio_whatsapp_number" 
+                                   value="{{ settings.whatsapp|selectattr('key', 'equalto', 'twilio_whatsapp_number')|map(attribute='value')|first or '' }}"
+                                   placeholder="+14155238886">
+                            <small class="text-muted">Your Twilio WhatsApp-enabled phone number</small>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="whatsapp_phone_number_id" class="form-label">Phone Number ID</label>
-                            <input type="text" class="form-control" name="setting_whatsapp_phone_number_id" 
-                                   value="{{ settings.whatsapp|selectattr('key', 'equalto', 'whatsapp_phone_number_id')|map(attribute='value')|first or '' }}"
-                                   placeholder="123456789012345">
-                            <small class="text-muted">WhatsApp Business Phone Number ID</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="whatsapp_verify_token" class="form-label">Webhook Verify Token</label>
-                            <input type="text" class="form-control" name="setting_whatsapp_verify_token" 
-                                   value="{{ settings.whatsapp|selectattr('key', 'equalto', 'whatsapp_verify_token')|map(attribute='value')|first or '' }}"
-                                   placeholder="your_verify_token">
-                            <small class="text-muted">Token for webhook verification</small>
+                            <label class="form-label">Webhook URL</label>
+                            <input type="text" class="form-control" value="{{ request.url_root }}webhook/whatsapp" readonly>
+                            <small class="text-muted">Configure this URL in your Twilio Console for WhatsApp webhooks</small>
                         </div>
                         
                         <div class="mb-3">
@@ -113,12 +103,12 @@
                         
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Setup Instructions:</strong>
+                            <strong>Twilio WhatsApp Setup:</strong>
                             <ol class="mb-0 mt-2">
-                                <li>Set up WhatsApp Business API through Meta</li>
-                                <li>Get Access Token from Facebook Developers</li>
-                                <li>Configure webhook URL: <code>/webhook/whatsapp</code></li>
-                                <li>Enter credentials and test the connection</li>
+                                <li>In Twilio Console, go to Messaging > Try it out > Send a WhatsApp message</li>
+                                <li>Copy your WhatsApp Sandbox number above</li>
+                                <li>In Twilio Console > WhatsApp > Sandbox Settings, set Webhook URL to the URL shown above</li>
+                                <li>Test the connection using the WhatsApp Test button below</li>
                             </ol>
                         </div>
                     </div>

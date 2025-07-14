@@ -342,31 +342,56 @@ def export_applications_zip(applications):
             download_name='applications.zip'
         )
 
-# WhatsApp webhook
+# WhatsApp webhook (Twilio format)
 @app.route('/webhook/whatsapp', methods=['GET', 'POST'])
 def whatsapp_webhook():
     if request.method == 'GET':
-        # Webhook verification - get from system settings
-        verify_token = SystemSettings.get_setting('whatsapp_verify_token') or os.environ.get('WHATSAPP_VERIFY_TOKEN', 'your_verify_token')
-        
-        if request.args.get('hub.verify_token') == verify_token:
-            return request.args.get('hub.challenge')
-        return 'Invalid verification token', 403
+        # For Twilio, this is typically not used, but keep for compatibility
+        return 'Webhook endpoint ready', 200
     
     elif request.method == 'POST':
-        # Handle incoming messages
+        # Handle incoming Twilio WhatsApp messages
         try:
-            data = request.get_json()
-            current_app.logger.info(f"=== WHATSAPP WEBHOOK RECEIVED ===")
-            current_app.logger.info(f"Raw data: {data}")
+            # Twilio sends form data, not JSON
+            data = request.form.to_dict()
+            current_app.logger.info(f"=== TWILIO WHATSAPP WEBHOOK RECEIVED ===")
+            current_app.logger.info(f"Form data: {data}")
             current_app.logger.info(f"Request headers: {dict(request.headers)}")
             
-            # Import here to avoid circular imports
-            from whatsapp_handler import handle_webhook
-            handle_webhook(data)
+            # Convert Twilio format to our internal format
+            if 'From' in data and 'Body' in data:
+                # Extract phone number (remove 'whatsapp:' prefix)
+                from_number = data['From'].replace('whatsapp:', '')
+                message_body = data['Body']
+                message_sid = data.get('MessageSid', 'unknown')
+                
+                # Create WhatsApp message format for our handler
+                converted_data = {
+                    'entry': [{
+                        'changes': [{
+                            'field': 'messages',
+                            'value': {
+                                'messages': [{
+                                    'id': message_sid,
+                                    'from': from_number,
+                                    'timestamp': str(int(datetime.now().timestamp())),
+                                    'type': 'text',
+                                    'text': {
+                                        'body': message_body
+                                    }
+                                }]
+                            }
+                        }]
+                    }]
+                }
+                
+                # Import and process
+                from whatsapp_handler import handle_webhook
+                handle_webhook(converted_data)
+            
             return 'OK', 200
         except Exception as e:
-            current_app.logger.error(f"Error processing WhatsApp webhook: {e}")
+            current_app.logger.error(f"Error processing Twilio WhatsApp webhook: {e}")
             import traceback
             current_app.logger.error(f"Traceback: {traceback.format_exc()}")
             return 'Error', 500
