@@ -15,26 +15,27 @@ from communication import send_whatsapp_message, send_email, send_sms
 import whatsapp_handler
 
 def auto_deactivate_expired_internships():
-    """Automatically deactivate internships that have passed their deadline"""
+    """Automatically stop accepting applications for internships that have passed their deadline"""
     try:
         from datetime import datetime
         
-        # Find all active internships that have passed their deadline
+        # Find all active internships that have passed their deadline but are still accepting applications
         expired_internships = Internship.query.filter(
             Internship.is_active == True,
+            Internship.accepting_applications == True,
             Internship.deadline < datetime.utcnow()
         ).all()
         
         if expired_internships:
             for internship in expired_internships:
-                internship.is_active = False
-                current_app.logger.info(f"Auto-deactivated expired internship: {internship.title} (ID: {internship.id})")
+                internship.accepting_applications = False
+                current_app.logger.info(f"Auto-stopped applications for expired internship: {internship.title} (ID: {internship.id})")
             
             db.session.commit()
-            current_app.logger.info(f"Auto-deactivated {len(expired_internships)} expired internships")
+            current_app.logger.info(f"Auto-stopped applications for {len(expired_internships)} expired internships")
             
     except Exception as e:
-        current_app.logger.error(f"Error auto-deactivating expired internships: {e}")
+        current_app.logger.error(f"Error auto-stopping applications for expired internships: {e}")
         db.session.rollback()
 
 # Authentication routes
@@ -110,15 +111,23 @@ def dashboard():
 @app.route('/internships')
 @login_required
 def internships():
-    # Auto-deactivate expired internships
+    # Auto-stop applications for expired internships (but keep them visible)
     auto_deactivate_expired_internships()
     
     page = request.args.get('page', 1, type=int)
-    internships = Internship.query.filter_by(is_active=True).order_by(
-        Internship.created_at.desc()).paginate(
+    status_filter = request.args.get('status', 'all')
+    
+    query = Internship.query.filter_by(is_active=True)
+    
+    if status_filter == 'accepting':
+        query = query.filter_by(accepting_applications=True)
+    elif status_filter == 'closed':
+        query = query.filter_by(accepting_applications=False)
+    
+    internships = query.order_by(Internship.created_at.desc()).paginate(
         page=page, per_page=10, error_out=False)
     
-    return render_template('internships.html', internships=internships)
+    return render_template('internships.html', internships=internships, status_filter=status_filter)
 
 @app.route('/internships/create', methods=['GET', 'POST'])
 @login_required
@@ -185,6 +194,18 @@ def deactivate_internship(id):
     internship.is_active = False
     db.session.commit()
     flash('Internship deactivated successfully!', 'success')
+    return redirect(url_for('internships'))
+
+@app.route('/internships/<int:id>/toggle-applications')
+@login_required
+def toggle_applications(id):
+    internship = Internship.query.get_or_404(id)
+    internship.accepting_applications = not internship.accepting_applications
+    
+    action = "opened" if internship.accepting_applications else "closed"
+    db.session.commit()
+    
+    flash(f'Applications for "{internship.title}" have been {action}', 'success')
     return redirect(url_for('internships'))
 
 @app.route('/internships/<int:id>/share')

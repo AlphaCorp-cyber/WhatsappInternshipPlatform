@@ -182,7 +182,7 @@ def handle_apply_command(application, message_body, from_number):
     position_code = parts[1]
     secret_code = parts[2]
     
-    # Find internship
+    # Find internship (check both active and accepting applications)
     internship = Internship.query.filter_by(
         position_code=position_code,
         secret_code=secret_code,
@@ -196,14 +196,23 @@ def handle_apply_command(application, message_body, from_number):
         )
         return
     
+    # Check if deadline has passed - only stop accepting applications, don't deactivate
     if internship.is_deadline_passed():
-        # Auto-deactivate the expired internship
-        internship.is_active = False
+        # Stop accepting new applications but keep internship active for admin viewing
+        internship.accepting_applications = False
         db.session.commit()
         
         send_whatsapp_message(
             from_number,
             f"⏰ Sorry, the application deadline for **{internship.title}** has passed.\n\nDeadline was: {internship.deadline.strftime('%B %d, %Y')}\n\nPlease check for other available opportunities."
+        )
+        return
+    
+    # Also check if manually stopped accepting applications
+    if not internship.accepting_applications:
+        send_whatsapp_message(
+            from_number,
+            f"📋 Applications for **{internship.title}** are currently closed.\n\nPlease check for other available opportunities."
         )
         return
     

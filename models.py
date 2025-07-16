@@ -36,6 +36,7 @@ class Internship(db.Model):
     secret_code = db.Column(db.String(20), nullable=False)
     deadline = db.Column(db.DateTime, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+    accepting_applications = db.Column(db.Boolean, default=True)  # Separate flag for applications
     created_by = db.Column(db.Integer, db.ForeignKey('admins.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
