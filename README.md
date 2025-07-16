@@ -17,6 +17,8 @@ nano .env
 ```bash
 # Run the setup script to create tables and default admin
 python3 create_sample_data.py
+
+# If you get database errors, the script will auto-fix schema issues
 ```
 
 ### 3. Start Application

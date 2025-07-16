@@ -17,6 +17,19 @@ def create_sample_data():
         print("Creating database tables...")
         db.create_all()
         
+        # Add missing columns to existing tables if needed
+        try:
+            from sqlalchemy import text
+            db.session.execute(text("ALTER TABLE applications ADD COLUMN IF NOT EXISTS email_hash VARCHAR(64)"))
+            db.session.execute(text("ALTER TABLE applications ADD COLUMN IF NOT EXISTS name_similarity_score FLOAT"))
+            db.session.execute(text("ALTER TABLE applications ADD COLUMN IF NOT EXISTS is_duplicate BOOLEAN DEFAULT FALSE"))
+            db.session.execute(text("ALTER TABLE applications ADD COLUMN IF NOT EXISTS original_application_id VARCHAR(20)"))
+            db.session.commit()
+            print("✅ Database schema updated with missing columns")
+        except Exception as e:
+            print(f"Database schema update (expected if columns exist): {e}")
+            db.session.rollback()
+        
         # Check if admin already exists
         existing_admin = Admin.query.filter_by(username='admin').first()
         if not existing_admin:
