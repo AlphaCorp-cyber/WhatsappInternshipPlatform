@@ -114,6 +114,12 @@ class Application(db.Model):
     conversation_state = db.Column(db.String(50), default='waiting_for_apply')
     temp_data = db.Column(db.JSON)  # Store temporary data during application process
     
+    # Duplicate detection fields
+    email_hash = db.Column(db.String(64))  # Hashed email for duplicate detection
+    name_similarity_score = db.Column(db.Float)  # For fuzzy name matching
+    is_duplicate = db.Column(db.Boolean, default=False)
+    original_application_id = db.Column(db.String(20))  # References original if duplicate
+    
     @staticmethod
     def generate_application_id():
         """Generate unique application ID"""

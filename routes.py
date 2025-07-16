@@ -497,6 +497,57 @@ def export_applications_csv(applications):
                 app.phone_number,
                 app.whatsapp_number,
                 app.status,
+
+
+@app.route('/applications/duplicates')
+@login_required
+def view_duplicates():
+    """View and manage duplicate applications"""
+    duplicates = Application.query.filter_by(is_duplicate=True).order_by(Application.applied_at.desc()).all()
+    return render_template('duplicates.html', duplicates=duplicates)
+
+@app.route('/applications/<int:id>/mark-duplicate', methods=['POST'])
+@login_required
+def mark_as_duplicate(id):
+    """Mark application as duplicate"""
+    application = Application.query.get_or_404(id)
+    original_id = request.form.get('original_application_id')
+    
+    application.is_duplicate = True
+    application.original_application_id = original_id
+    application.status = 'rejected'
+    
+    db.session.commit()
+    flash('Application marked as duplicate', 'success')
+    return redirect(url_for('applications'))
+
+@app.route('/applications/validate-batch', methods=['POST'])
+@login_required
+def validate_batch_applications():
+    """Batch validate applications for duplicates"""
+    from utils import detect_duplicate_application
+    
+    validated = 0
+    duplicates_found = 0
+    
+    applications = Application.query.filter_by(conversation_state='completed', is_duplicate=False).all()
+    
+    for app in applications:
+        is_duplicate, original_app_id, reason = detect_duplicate_application(
+            app.internship_id, app.full_name, app.email, app.whatsapp_number
+        )
+        
+        if is_duplicate:
+            app.is_duplicate = True
+            app.original_application_id = original_app_id
+            duplicates_found += 1
+        
+        validated += 1
+    
+    db.session.commit()
+    flash(f'Validated {validated} applications. Found {duplicates_found} duplicates.', 'info')
+    return redirect(url_for('applications'))
+
                 app.applied_at.strftime('%Y-%m-%d %H:%M:%S'),
                 app.cv_original_filename or 'N/A'
             ])

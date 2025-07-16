@@ -97,6 +97,78 @@ def format_phone_number(phone_number):
             # Remove leading zero if present
             if cleaned.startswith('0'):
                 cleaned = cleaned[1:]
+
+
+import hashlib
+from difflib import SequenceMatcher
+
+def hash_email(email):
+    """Create hash of email for duplicate detection"""
+    return hashlib.sha256(email.lower().strip().encode()).hexdigest()
+
+def calculate_name_similarity(name1, name2):
+    """Calculate similarity between two names (0-1 scale)"""
+    return SequenceMatcher(None, name1.lower().strip(), name2.lower().strip()).ratio()
+
+def detect_duplicate_application(internship_id, full_name, email, whatsapp_number):
+    """
+    Detect if this is a duplicate application
+    Returns: (is_duplicate, original_application_id, reason)
+    """
+    from models import Application
+    
+    # Check for exact email match (different phone numbers)
+    email_hash = hash_email(email)
+    existing_email = Application.query.filter_by(
+        internship_id=internship_id,
+        email_hash=email_hash,
+        conversation_state='completed'
+    ).first()
+    
+    if existing_email and existing_email.whatsapp_number != whatsapp_number:
+        return True, existing_email.application_id, "Same email, different WhatsApp number"
+    
+    # Check for similar names with different emails/numbers
+    existing_apps = Application.query.filter_by(
+        internship_id=internship_id,
+        conversation_state='completed'
+    ).all()
+    
+    for app in existing_apps:
+        if app.whatsapp_number != whatsapp_number:
+            name_similarity = calculate_name_similarity(full_name, app.full_name)
+            if name_similarity > 0.85:  # 85% similarity threshold
+                return True, app.application_id, f"Similar name ({name_similarity:.2%} match)"
+    
+    return False, None, None
+
+def validate_application_authenticity(full_name, email, cv_filename):
+    """
+    Basic validation to detect fake applications
+    Returns: (is_valid, issues)
+    """
+    issues = []
+    
+    # Check for suspicious patterns
+    if len(full_name.split()) < 2:
+        issues.append("Name appears incomplete")
+    
+    if any(word in full_name.lower() for word in ['test', 'fake', 'demo', 'sample']):
+        issues.append("Name contains suspicious words")
+    
+    if any(domain in email.lower() for domain in ['tempmail', '10minute', 'guerrilla']):
+        issues.append("Temporary email address detected")
+    
+    # Check if CV file is too small (likely fake)
+    if cv_filename:
+        import os
+        from flask import current_app
+        cv_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cv_filename)
+        if os.path.exists(cv_path) and os.path.getsize(cv_path) < 10000:  # Less than 10KB
+            issues.append("CV file suspiciously small")
+    
+    return len(issues) == 0, issues
+
             cleaned = '263' + cleaned
         cleaned = '+' + cleaned
     

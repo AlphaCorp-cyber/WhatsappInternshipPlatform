@@ -391,6 +391,41 @@ def process_media_message(application, whatsapp_msg, from_number):
         # Complete the application with real data from temp_data 
         temp_data = application.temp_data or {}
         
+        # Validate application authenticity
+        from utils import validate_application_authenticity, detect_duplicate_application, hash_email
+        
+        full_name = temp_data.get('full_name')
+        email = temp_data.get('email')
+        
+        # Check for duplicates
+        is_duplicate, original_app_id, duplicate_reason = detect_duplicate_application(
+            application.internship_id, full_name, email, from_number
+        )
+        
+        if is_duplicate:
+            send_whatsapp_message(
+                from_number,
+                f"⚠️ **Duplicate Application Detected**\n\n"
+                f"Our system detected that you may have already applied for this position.\n\n"
+                f"**Reason:** {duplicate_reason}\n"
+                f"**Original Application:** {original_app_id}\n\n"
+                f"If this is an error, please contact support."
+            )
+            return
+        
+        # Validate authenticity
+        is_valid, validation_issues = validate_application_authenticity(full_name, email, filename)
+        
+        if not is_valid:
+            send_whatsapp_message(
+                from_number,
+                f"❌ **Application Validation Failed**\n\n"
+                f"Please review and correct the following issues:\n"
+                f"• {chr(10).join(validation_issues)}\n\n"
+                f"Please reapply with accurate information."
+            )
+            return
+        
         # ONLY save application to database when it's complete with all data
         # If this is still an incomplete application, create a new complete one
         if not application.full_name or not application.email:
@@ -407,7 +442,9 @@ def process_media_message(application, whatsapp_msg, from_number):
                 cv_original_filename=original_filename,
                 conversation_state=STATE_COMPLETED,
                 applied_at=datetime.utcnow(),
-                temp_data={}
+                temp_data={},
+                email_hash=hash_email(temp_data.get('email')),
+                is_duplicate=False
             )
             
             # Delete the incomplete application if it was in database
