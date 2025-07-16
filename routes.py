@@ -497,7 +497,22 @@ def export_applications_csv(applications):
                 app.phone_number,
                 app.whatsapp_number,
                 app.status,
-
+                app.applied_at.strftime('%Y-%m-%d %H:%M:%S') if app.applied_at else '',
+                app.cv_filename or ''
+            ])
+        
+        tmp_file_path = tmp_file.name
+    
+    @app.after_request
+    def remove_file(response):
+        try:
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
+        except Exception:
+            pass
+        return response
+    
+    return send_file(tmp_file_path, as_attachment=True, download_name='applications.csv', mimetype='text/csv')
 
 @app.route('/applications/duplicates')
 @login_required
@@ -547,27 +562,6 @@ def validate_batch_applications():
     db.session.commit()
     flash(f'Validated {validated} applications. Found {duplicates_found} duplicates.', 'info')
     return redirect(url_for('applications'))
-
-                app.applied_at.strftime('%Y-%m-%d %H:%M:%S'),
-                app.cv_original_filename or 'N/A'
-            ])
-        
-        tmp_file_path = tmp_file.name
-    
-    # Send the file and clean up after
-    def remove_file(response):
-        try:
-            os.remove(tmp_file_path)
-        except OSError:
-            pass
-        return response
-    
-    return send_file(
-        tmp_file_path,
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name='applications.csv'
-    )
 
 def export_applications_zip(applications):
     import tempfile

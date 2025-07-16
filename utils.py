@@ -169,11 +169,6 @@ def validate_application_authenticity(full_name, email, cv_filename):
     
     return len(issues) == 0, issues
 
-            cleaned = '263' + cleaned
-        cleaned = '+' + cleaned
-    
-    return cleaned
-
 def generate_qr_code(text):
     """Generate QR code for sharing (optional feature)"""
     try:
