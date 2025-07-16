@@ -245,8 +245,15 @@ def update_application_status(id):
         db.session.commit()
         
         if send_notification and new_status != old_status:
-            # Send notification to applicant
-            message = f"Your application for {application.internship.title} has been updated to: {new_status.title()}"
+            # Send personalized notification to applicant with emojis
+            if new_status == 'selected':
+                message = f"🎉 **CONGRATULATIONS {application.full_name}!** 🎉\n\n✨ We are delighted to inform you that you have been **SELECTED** for the {application.internship.title} position!\n\n🚀 This is an amazing achievement and we're excited to have you join our team!\n\n📧 Please check your email for next steps and onboarding details.\n\n🎊 Welcome aboard! 🎊"
+            elif new_status == 'rejected':
+                message = f"📧 Dear {application.full_name},\n\n😔 We regret to inform you that your application for {application.internship.title} was not successful this time.\n\n💪 Please don't be discouraged! This doesn't reflect your abilities or potential.\n\n🌟 We encourage you to:\n• Keep developing your skills\n• Apply for future opportunities with us\n• Stay connected for upcoming positions\n\n🙏 Thank you for your interest in our company. We wish you all the best in your career journey!\n\n💼 Keep pushing forward - your perfect opportunity is coming!"
+            elif new_status == 'shortlisted':
+                message = f"🎯 **Great News {application.full_name}!** 🎯\n\n✅ You have been **SHORTLISTED** for the {application.internship.title} position!\n\n📋 You've made it to the next round! This means your application stood out among many candidates.\n\n📞 **Next Steps:**\n• Keep your phone available for contact\n• Check your email regularly\n• Prepare for potential interviews\n\n🤞 Best of luck! We'll be in touch soon."
+            else:  # pending or other status
+                message = f"📋 Hello {application.full_name},\n\n📄 Your application status for **{application.internship.title}** has been updated to: **{new_status.title()}**\n\n🔍 We'll keep you informed of any changes.\n\n📧 Thank you for your patience!"
             
             # Send WhatsApp notification
             try:
