@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Shortlisted Applicants - WhatsApp Internship System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-star me-2"></i>Shortlisted Applicants</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('applications') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-users me-1"></i>All Applications
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filter by Internship -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label for="internship_id" class="form-label">Filter by Internship</label>
+                    <select class="form-select auto-filter-select" id="internship_id" name="internship_id">
+                        <option value="">All Internships</option>
+                        {% for internship in internships %}
+                            <option value="{{ internship.id }}" 
+                                    {% if current_internship_id == internship.id %}selected{% endif %}>
+                                {{ internship.title }} ({{ internship.position_code }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <small class="text-muted me-3 align-self-center">
+                        <i class="fas fa-magic me-1"></i>Auto-filtering enabled
+                    </small>
+                    <a href="{{ url_for('shortlisted_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if applications %}
+        <!-- Bulk Message Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Send Bulk Interview Notifications</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('send_bulk_message') }}" id="bulkMessageForm">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="interview_date" class="form-label">Interview Date</label>
+                            <input type="date" class="form-control" id="interview_date" name="interview_date">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="interview_time" class="form-label">Interview Time</label>
+                            <input type="time" class="form-control" id="interview_time" name="interview_time">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="interview_location" class="form-label">Interview Location</label>
+                            <input type="text" class="form-control" id="interview_location" name="interview_location" 
+                                   placeholder="e.g. Office Conference Room A">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message_template" class="form-label">Message Template</label>
+                        <textarea class="form-control" id="message_template" name="message_template" rows="6" required>🎉 Congratulations {name}!
+
+✅ You have been shortlisted for the {position} position!
+
+📅 **Interview Details:**
+• Date: {interview_date}
+• Time: {interview_time} 
+• Location: {interview_location}
+
+📋 **What to bring:**
+• Updated CV
+• Valid ID
+• Portfolio (if applicable)
+
+📞 Please confirm your attendance by replying to this message.
+
+Good luck! 🤞</textarea>
+                        <small class="form-text text-muted">
+                            Available placeholders: {name}, {position}, {interview_date}, {interview_time}, {interview_location}
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="selectAll()">
+                                <i class="fas fa-check-square me-1"></i>Select All
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearSelection()">
+                                <i class="fas fa-square me-1"></i>Clear Selection
+                            </button>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="sendBulkBtn" disabled>
+                            <i class="fas fa-paper-plane me-1"></i>Send to Selected (<span id="selectedCount">0</span>)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Shortlisted Applications Table -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">{{ applications|length }} Shortlisted Applicant{{ 's' if applications|length != 1 else '' }}</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="50">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)">
+                                </th>
+                                <th>Applicant</th>
+                                <th>Internship</th>
+                                <th>Applied</th>
+                                <th>Contact</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for application in applications %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="application_ids" value="{{ application.id }}" 
+                                           class="applicant-checkbox" onchange="updateSelectedCount()">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <strong>{{ application.full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ application.application_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ application.internship.title }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ application.internship.position_code }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span title="{{ application.applied_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+                                        {{ application.applied_at.strftime('%d %b %Y') }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ application.applied_at | date_diff }} ago</small>
+                                </td>
+                                <td>
+                                    <div>
+                                        <a href="mailto:{{ application.email }}" class="text-decoration-none">
+                                            <i class="fas fa-envelope me-1"></i>{{ application.email }}
+                                        </a>
+                                        <br>
+                                        <a href="https://wa.me/{{ application.whatsapp_number.replace('+', '') }}" 
+                                           target="_blank" class="text-decoration-none">
+                                            <i class="fab fa-whatsapp me-1"></i>{{ application.whatsapp_number }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('application_detail', id=application.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if application.cv_filename %}
+                                        <a href="{{ url_for('view_cv', id=application.id) }}" 
+                                           class="btn btn-outline-info btn-sm" target="_blank">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                <h5>No Shortlisted Applicants</h5>
+                <p class="text-muted mb-4">There are currently no shortlisted applicants{% if current_internship_id %} for this internship{% endif %}.</p>
+                <a href="{{ url_for('applications') }}" class="btn btn-primary">
+                    <i class="fas fa-users me-1"></i>View All Applications
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Move checkboxes from form to table rows
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bulkMessageForm');
+    const checkboxes = document.querySelectorAll('.applicant-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        // Create hidden input in form for each checkbox
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'application_ids';
+        hiddenInput.disabled = true;
+        hiddenInput.value = checkbox.value;
+        form.appendChild(hiddenInput);
+        
+        // Update hidden input when checkbox changes
+        checkbox.addEventListener('change', function() {
+            hiddenInput.disabled = !this.checked;
+        });
+    });
+});
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.applicant-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+    });
+    document.getElementById('selectAllCheckbox').checked = true;
+    updateSelectedCount();
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.applicant-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change'));
+    });
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateSelectedCount();
+}
+
+function toggleAll(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.applicant-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = masterCheckbox.checked;
+        cb.dispatchEvent(new Event('change'));
+    });
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('.applicant-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = checked;
+    document.getElementById('sendBulkBtn').disabled = checked === 0;
+    
+    // Update master checkbox
+    const total = document.querySelectorAll('.applicant-checkbox').length;
+    const masterCheckbox = document.getElementById('selectAllCheckbox');
+    masterCheckbox.indeterminate = checked > 0 && checked < total;
+    masterCheckbox.checked = checked === total && total > 0;
+}
+</script>
+{% endblock %}

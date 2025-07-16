@@ -169,6 +169,99 @@ def get_share_message(id):
     return jsonify({'message': share_message})
 
 # Application management routes
+@app.route('/shortlisted')
+@login_required
+def shortlisted_dashboard():
+    """Shortlisted applicants dashboard with bulk messaging"""
+    internship_id = request.args.get('internship_id', type=int)
+    
+    # Get shortlisted applications
+    query = Application.query.filter_by(status='shortlisted')
+    
+    if internship_id:
+        query = query.filter_by(internship_id=internship_id)
+    
+    shortlisted_applications = query.order_by(Application.applied_at.desc()).all()
+    internships = Internship.query.filter_by(is_active=True).all()
+    
+    return render_template('shortlisted_dashboard.html', 
+                         applications=shortlisted_applications,
+                         internships=internships,
+                         current_internship_id=internship_id)
+
+@app.route('/shortlisted/bulk-message', methods=['POST'])
+@login_required
+def send_bulk_message():
+    """Send bulk WhatsApp message to shortlisted applicants"""
+    try:
+        application_ids = request.form.getlist('application_ids')
+        message_template = request.form.get('message_template')
+        interview_date = request.form.get('interview_date')
+        interview_time = request.form.get('interview_time')
+        interview_location = request.form.get('interview_location')
+        
+        if not application_ids or not message_template:
+            flash('Please select applicants and provide a message template.', 'warning')
+            return redirect(url_for('shortlisted_dashboard'))
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for app_id in application_ids:
+            application = Application.query.get(app_id)
+            if not application or application.status != 'shortlisted':
+                continue
+                
+            # Personalize the message
+            personalized_message = message_template.format(
+                name=application.full_name,
+                position=application.internship.title,
+                interview_date=interview_date or "[Date to be confirmed]",
+                interview_time=interview_time or "[Time to be confirmed]", 
+                interview_location=interview_location or "[Location to be confirmed]"
+            )
+            
+            try:
+                from communication import send_whatsapp_message
+                send_whatsapp_message(application.whatsapp_number, personalized_message)
+                sent_count += 1
+                
+                # Log the notification
+                from communication import log_notification
+                log_notification(
+                    application.id,
+                    'whatsapp',
+                    application.whatsapp_number,
+                    personalized_message,
+                    'sent'
+                )
+                
+            except Exception as e:
+                failed_count += 1
+                current_app.logger.error(f"Failed to send message to {application.whatsapp_number}: {e}")
+                
+                # Log the failed notification
+                from communication import log_notification
+                log_notification(
+                    application.id,
+                    'whatsapp',
+                    application.whatsapp_number,
+                    personalized_message,
+                    'failed',
+                    str(e)
+                )
+        
+        if sent_count > 0:
+            flash(f'✅ Successfully sent messages to {sent_count} applicants!', 'success')
+        if failed_count > 0:
+            flash(f'⚠️ Failed to send {failed_count} messages. Check logs for details.', 'warning')
+            
+        return redirect(url_for('shortlisted_dashboard'))
+        
+    except Exception as e:
+        flash(f'Error sending bulk messages: {str(e)}', 'danger')
+        return redirect(url_for('shortlisted_dashboard'))
+
 @app.route('/applications')
 @login_required
 def applications():
