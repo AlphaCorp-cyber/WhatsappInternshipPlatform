@@ -243,8 +243,14 @@ def handle_name_input(application, message_body, from_number):
     application.temp_data = temp_data
     application.conversation_state = STATE_WAITING_FOR_EMAIL
     
-    # Save to database immediately
-    db.session.commit()
+    # Force database commit immediately
+    try:
+        db.session.add(application)
+        db.session.commit()
+        logger.info(f"✅ Name saved: {application.full_name} for {application.application_id}")
+    except Exception as e:
+        logger.error(f"❌ Failed to save name: {e}")
+        db.session.rollback()
     
     send_whatsapp_message(
         from_number,
@@ -270,8 +276,14 @@ def handle_email_input(application, message_body, from_number):
     application.temp_data = temp_data
     application.conversation_state = STATE_WAITING_FOR_CV
     
-    # Save to database immediately
-    db.session.commit()
+    # Force database commit immediately
+    try:
+        db.session.add(application)
+        db.session.commit()
+        logger.info(f"✅ Email saved: {application.email} for {application.application_id}")
+    except Exception as e:
+        logger.error(f"❌ Failed to save email: {e}")
+        db.session.rollback()
     
     send_whatsapp_message(
         from_number,
@@ -362,8 +374,12 @@ def process_media_message(application, whatsapp_msg, from_number):
             )
             return
         
-        # Complete the application - name and email should already be saved from earlier steps
-        # Just add the final CV and completion data
+        # Complete the application with real data from temp_data 
+        temp_data = application.temp_data or {}
+        
+        # FORCE real data to be saved - override any fallback data
+        application.full_name = temp_data.get('full_name', application.full_name)
+        application.email = temp_data.get('email', application.email)
         application.phone_number = from_number  # Use the WhatsApp number as phone
         application.cover_letter = temp_data.get('cover_letter', 'Please see attached CV for details')
         application.cv_filename = filename
@@ -371,11 +387,14 @@ def process_media_message(application, whatsapp_msg, from_number):
         application.conversation_state = STATE_COMPLETED
         application.applied_at = datetime.utcnow()
         
-        # Ensure name and email are saved (fallback protection)
-        if not application.full_name or application.full_name == 'Name from CV':
-            application.full_name = temp_data.get('full_name', 'Name from CV')
-        if not application.email or 'pending.com' in application.email:
-            application.email = temp_data.get('email', f'applicant_{application.id}@pending.com')
+        # Final safety check - if still fallback data, log error
+        if application.full_name == 'Name from CV' or 'pending.com' in application.email:
+            logger.error(f"❌ CRITICAL: Still using fallback data for {application.application_id}")
+            logger.error(f"   Full Name: {application.full_name}")
+            logger.error(f"   Email: {application.email}")
+            logger.error(f"   Temp Data: {temp_data}")
+        else:
+            logger.info(f"✅ Real data confirmed for {application.application_id}: {application.full_name}, {application.email}")
         
         internship = Internship.query.get(application.internship_id)
         
