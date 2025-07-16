@@ -142,6 +142,7 @@ def get_or_create_application(phone_number):
     
     if not application:
         application = Application(
+            application_id=Application.generate_application_id(),
             whatsapp_number=phone_number,
             conversation_state=STATE_WAITING_FOR_APPLY,
             temp_data={}
@@ -235,6 +236,8 @@ def handle_name_input(application, message_body, from_number):
         )
         return
     
+    # Store the actual name provided by user
+    application.full_name = message_body.strip()
     temp_data = application.temp_data or {}
     temp_data['full_name'] = message_body.strip()
     application.temp_data = temp_data
@@ -257,6 +260,8 @@ def handle_email_input(application, message_body, from_number):
         )
         return
     
+    # Store the actual email provided by user
+    application.email = email
     temp_data = application.temp_data or {}
     temp_data['email'] = email
     application.temp_data = temp_data

@@ -153,6 +153,8 @@ To receive real WhatsApp messages via Twilio, you need:
 
 ## Changelog
 
+- July 16, 2025: Fixed applicant data storage - real names and emails from WhatsApp now stored in database instead of fallback values
+- July 16, 2025: Added unique application IDs for each user application (format: APP-YYYYMMDD-XXXX)
 - July 14, 2025: PDF-only document system with in-browser viewing and automatic file download
 - July 14, 2025: Fixed PDF upload recognition and CV file storage system
 - July 14, 2025: Streamlined application process - name, email + CV upload for speed

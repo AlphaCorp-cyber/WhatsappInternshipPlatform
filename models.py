@@ -96,6 +96,7 @@ class Application(db.Model):
     __tablename__ = 'applications'
     
     id = db.Column(db.Integer, primary_key=True)
+    application_id = db.Column(db.String(20), unique=True, nullable=False)  # Unique identifier for each application
     internship_id = db.Column(db.Integer, db.ForeignKey('internships.id'), nullable=True)  # Allow null during conversation
     full_name = db.Column(db.String(200), nullable=True)  # Allow null during conversation
     email = db.Column(db.String(120), nullable=True)  # Allow null during conversation  
@@ -111,6 +112,28 @@ class Application(db.Model):
     # WhatsApp conversation state
     conversation_state = db.Column(db.String(50), default='waiting_for_apply')
     temp_data = db.Column(db.JSON)  # Store temporary data during application process
+    
+    @staticmethod
+    def generate_application_id():
+        """Generate unique application ID"""
+        import string
+        import random
+        
+        # Generate format: APP-YYYYMMDD-XXXX (e.g., APP-20250716-A1B2)
+        date_str = datetime.utcnow().strftime('%Y%m%d')
+        
+        # Generate random 4-character suffix
+        chars = string.ascii_uppercase + string.digits
+        suffix = ''.join(random.choice(chars) for _ in range(4))
+        
+        application_id = f"APP-{date_str}-{suffix}"
+        
+        # Ensure uniqueness
+        while Application.query.filter_by(application_id=application_id).first():
+            suffix = ''.join(random.choice(chars) for _ in range(4))
+            application_id = f"APP-{date_str}-{suffix}"
+        
+        return application_id
     
     def __repr__(self):
         return f'<Application {self.full_name} for {self.internship.title}>'
