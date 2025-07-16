@@ -6,9 +6,16 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-briefcase me-2"></i>Internships</h1>
-        <a href="{{ url_for('create_internship') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i>Create New
-        </a>
+        <div class="d-flex gap-2">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('internships', status='all') }}" class="btn btn-outline-secondary {{ 'active' if status_filter == 'all' else '' }}">All</a>
+                <a href="{{ url_for('internships', status='accepting') }}" class="btn btn-outline-secondary {{ 'active' if status_filter == 'accepting' else '' }}">Accepting</a>
+                <a href="{{ url_for('internships', status='closed') }}" class="btn btn-outline-secondary {{ 'active' if status_filter == 'closed' else '' }}">Closed</a>
+            </div>
+            <a href="{{ url_for('create_internship') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create New
+            </a>
+        </div>
     </div>
     
     {% if internships.items %}
@@ -24,6 +31,9 @@
                                 <span class="badge bg-danger">Expired</span>
                             {% else %}
                                 <span class="badge bg-success">Active</span>
+                            {% endif %}
+                            {% if not internship.accepting_applications %}
+                                <span class="badge bg-warning">Closed</span>
                             {% endif %}
                         </div>
                     </div>
@@ -72,6 +82,15 @@
                             <a href="{{ url_for('regenerate_secret', id=internship.id) }}" class="btn btn-outline-warning btn-sm" onclick="return confirm('Generate new secret code?')">
                                 <i class="fas fa-key me-1"></i>New Secret
                             </a>
+                            {% if internship.accepting_applications %}
+                            <a href="{{ url_for('toggle_applications', id=internship.id) }}" class="btn btn-outline-warning btn-sm" onclick="return confirm('Close applications for this internship?')">
+                                <i class="fas fa-pause me-1"></i>Close Apps
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('toggle_applications', id=internship.id) }}" class="btn btn-outline-success btn-sm" onclick="return confirm('Open applications for this internship?')">
+                                <i class="fas fa-play me-1"></i>Open Apps
+                            </a>
+                            {% endif %}
                             <a href="{{ url_for('deactivate_internship', id=internship.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deactivate this internship?')">
                                 <i class="fas fa-times me-1"></i>Deactivate
                             </a>
