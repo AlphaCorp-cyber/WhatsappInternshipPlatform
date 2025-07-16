@@ -57,19 +57,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Search functionality with debounce
+    // Auto-filtering functionality with debounce
     var searchInputs = document.querySelectorAll('.search-input');
     searchInputs.forEach(function(input) {
         var timeoutId;
         input.addEventListener('input', function(e) {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(function() {
-                // Trigger search
+                // Trigger auto-filter
                 var form = input.closest('form');
-                if (form) {
+                if (form && input.getAttribute('data-auto-filter') === 'true') {
+                    showLoadingIndicator();
                     form.submit();
                 }
-            }, 500);
+            }, 300); // Reduced delay for faster response
+        });
+    });
+
+    // Auto-filtering for select dropdowns
+    var autoFilterSelects = document.querySelectorAll('.auto-filter-select');
+    autoFilterSelects.forEach(function(select) {
+        select.addEventListener('change', function(e) {
+            var form = select.closest('form');
+            if (form) {
+                showLoadingIndicator();
+                form.submit();
+            }
         });
     });
 
@@ -143,6 +156,21 @@ function updateApplicationStatus(applicationId, status) {
         console.error('Error:', error);
         showNotification('Error updating status', 'danger');
     });
+}
+
+function showLoadingIndicator() {
+    // Show loading spinner for auto-filter
+    var filterForm = document.querySelector('.card form');
+    if (filterForm) {
+        var existingSpinner = filterForm.querySelector('.filter-loading');
+        if (!existingSpinner) {
+            var spinner = document.createElement('div');
+            spinner.className = 'filter-loading position-absolute top-50 start-50 translate-middle';
+            spinner.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Filtering...</span></div>';
+            filterForm.style.position = 'relative';
+            filterForm.appendChild(spinner);
+        }
+    }
 }
 
 function refreshDashboardStats() {

@@ -24,7 +24,7 @@
             <form method="GET" class="row g-3">
                 <div class="col-md-3">
                     <label for="internship_id" class="form-label">Internship</label>
-                    <select class="form-select" id="internship_id" name="internship_id">
+                    <select class="form-select auto-filter-select" id="internship_id" name="internship_id">
                         <option value="">All Internships</option>
                         {% for internship in internships %}
                             <option value="{{ internship.id }}" 
@@ -37,7 +37,7 @@
                 
                 <div class="col-md-2">
                     <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
+                    <select class="form-select auto-filter-select" id="status" name="status">
                         <option value="">All Status</option>
                         <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
                         <option value="shortlisted" {% if current_status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
@@ -48,14 +48,15 @@
                 
                 <div class="col-md-4">
                     <label for="search" class="form-label">Search</label>
-                    <input type="text" class="form-control" id="search" name="search" 
-                           placeholder="Name, email, or phone" value="{{ search }}">
+                    <input type="text" class="form-control search-input" id="search" name="search" 
+                           placeholder="Name, email, or phone" value="{{ search }}"
+                           data-auto-filter="true">
                 </div>
                 
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-search me-1"></i>Filter
-                    </button>
+                    <small class="text-muted me-3 align-self-center">
+                        <i class="fas fa-magic me-1"></i>Auto-filtering enabled
+                    </small>
                     <a href="{{ url_for('applications') }}" class="btn btn-secondary">
                         <i class="fas fa-times me-1"></i>Clear
                     </a>
