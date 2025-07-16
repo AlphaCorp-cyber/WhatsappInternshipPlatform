@@ -392,7 +392,9 @@ def view_cv(id):
     
     cv_path = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), application.cv_filename)
     if not os.path.exists(cv_path):
-        flash('CV file not found on disk', 'error')
+        # Log the missing file for debugging
+        current_app.logger.error(f"CV file not found: {cv_path} for application {application.id}")
+        flash(f'CV file not found on disk: {application.cv_filename}', 'error')
         return redirect(url_for('application_detail', id=id))
     
     # Check if download is requested
