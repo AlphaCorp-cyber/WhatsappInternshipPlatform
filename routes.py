@@ -392,9 +392,7 @@ def view_cv(id):
     
     cv_path = os.path.join(app.config.get('UPLOAD_FOLDER', 'uploads'), application.cv_filename)
     if not os.path.exists(cv_path):
-        # Log the missing file for debugging
-        current_app.logger.error(f"CV file not found: {cv_path} for application {application.id}")
-        flash(f'CV file not found on disk: {application.cv_filename}', 'error')
+        flash('CV file not found on disk', 'error')
         return redirect(url_for('application_detail', id=id))
     
     # Check if download is requested
@@ -499,71 +497,26 @@ def export_applications_csv(applications):
                 app.phone_number,
                 app.whatsapp_number,
                 app.status,
-                app.applied_at.strftime('%Y-%m-%d %H:%M:%S') if app.applied_at else '',
-                app.cv_filename or ''
+                app.applied_at.strftime('%Y-%m-%d %H:%M:%S'),
+                app.cv_original_filename or 'N/A'
             ])
         
         tmp_file_path = tmp_file.name
     
-    @app.after_request
+    # Send the file and clean up after
     def remove_file(response):
         try:
-            if os.path.exists(tmp_file_path):
-                os.remove(tmp_file_path)
-        except Exception:
+            os.remove(tmp_file_path)
+        except OSError:
             pass
         return response
     
-    return send_file(tmp_file_path, as_attachment=True, download_name='applications.csv', mimetype='text/csv')
-
-@app.route('/applications/duplicates')
-@login_required
-def view_duplicates():
-    """View and manage duplicate applications"""
-    duplicates = Application.query.filter_by(is_duplicate=True).order_by(Application.applied_at.desc()).all()
-    return render_template('duplicates.html', duplicates=duplicates)
-
-@app.route('/applications/<int:id>/mark-duplicate', methods=['POST'])
-@login_required
-def mark_as_duplicate(id):
-    """Mark application as duplicate"""
-    application = Application.query.get_or_404(id)
-    original_id = request.form.get('original_application_id')
-    
-    application.is_duplicate = True
-    application.original_application_id = original_id
-    application.status = 'rejected'
-    
-    db.session.commit()
-    flash('Application marked as duplicate', 'success')
-    return redirect(url_for('applications'))
-
-@app.route('/applications/validate-batch', methods=['POST'])
-@login_required
-def validate_batch_applications():
-    """Batch validate applications for duplicates"""
-    from utils import detect_duplicate_application
-    
-    validated = 0
-    duplicates_found = 0
-    
-    applications = Application.query.filter_by(conversation_state='completed', is_duplicate=False).all()
-    
-    for app in applications:
-        is_duplicate, original_app_id, reason = detect_duplicate_application(
-            app.internship_id, app.full_name, app.email, app.whatsapp_number
-        )
-        
-        if is_duplicate:
-            app.is_duplicate = True
-            app.original_application_id = original_app_id
-            duplicates_found += 1
-        
-        validated += 1
-    
-    db.session.commit()
-    flash(f'Validated {validated} applications. Found {duplicates_found} duplicates.', 'info')
-    return redirect(url_for('applications'))
+    return send_file(
+        tmp_file_path,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='applications.csv'
+    )
 
 def export_applications_zip(applications):
     import tempfile
@@ -611,9 +564,8 @@ def export_applications_zip(applications):
 @app.route('/webhook/whatsapp', methods=['GET', 'POST'])
 def whatsapp_webhook():
     if request.method == 'GET':
-        # For Twilio webhook verification and status check
-        current_app.logger.info("WhatsApp webhook GET request - verification")
-        return 'WhatsApp webhook endpoint ready and accessible', 200, {'Content-Type': 'text/plain'}
+        # For Twilio, this is typically not used, but keep for compatibility
+        return 'Webhook endpoint ready', 200, {'Content-Type': 'text/plain'}
     
     elif request.method == 'POST':
         # Handle incoming Twilio WhatsApp messages
