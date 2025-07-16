@@ -109,8 +109,8 @@ def handle_incoming_message(message):
         
         db.session.add(whatsapp_msg)
         
-        # Find or create application record for this number
-        application = get_or_create_application(from_number)
+        # Find or create conversation (not saved to DB until complete)
+        application = get_or_create_conversation(from_number)
         
         # Process message based on conversation state
         if message_type == 'text':
@@ -126,28 +126,22 @@ def handle_incoming_message(message):
         logger.error(f"Error handling incoming message: {e}")
         db.session.rollback()
 
-def get_or_create_application(phone_number):
-    """Get existing application or create new one for phone number"""
-    # Look for existing incomplete application
+def get_or_create_conversation(phone_number):
+    """Get existing incomplete conversation or create new temporary conversation"""
+    # Look for existing incomplete application in database
     application = Application.query.filter_by(
-        whatsapp_number=phone_number,
-        conversation_state=STATE_COMPLETED
-    ).first()
+        whatsapp_number=phone_number
+    ).filter(Application.conversation_state != STATE_COMPLETED).first()
     
     if not application:
-        # Look for any incomplete application
-        application = Application.query.filter_by(
-            whatsapp_number=phone_number
-        ).filter(Application.conversation_state != STATE_COMPLETED).first()
-    
-    if not application:
+        # Create temporary conversation object (not saved to database until complete)
         application = Application(
             application_id=Application.generate_application_id(),
             whatsapp_number=phone_number,
             conversation_state=STATE_WAITING_FOR_APPLY,
             temp_data={}
         )
-        db.session.add(application)
+        # Important: Don't add to session yet - only when application is complete
     
     return application
 
@@ -235,6 +229,10 @@ def handle_apply_command(application, message_body, from_number):
     application.conversation_state = STATE_WAITING_FOR_NAME
     application.temp_data = {'internship_id': internship.id}
     
+    # Now save the incomplete application to track conversation state
+    db.session.add(application)
+    db.session.commit()
+    
     send_whatsapp_message(
         from_number,
         f"🎉 Welcome! You're applying for: **{internship.title}**\n⏰ Deadline: {internship.deadline.strftime('%B %d, %Y')}\n\n⚡ **Quick Process:** Just 3 steps!\n\n👤 First, please provide your **full name**:"
@@ -255,6 +253,9 @@ def handle_name_input(application, message_body, from_number):
     temp_data['full_name'] = message_body.strip()
     application.temp_data = temp_data
     application.conversation_state = STATE_WAITING_FOR_EMAIL
+    
+    # Update the conversation state in database
+    db.session.commit()
     
     # Force database commit immediately
     try:
@@ -390,15 +391,42 @@ def process_media_message(application, whatsapp_msg, from_number):
         # Complete the application with real data from temp_data 
         temp_data = application.temp_data or {}
         
-        # FORCE real data to be saved - override any fallback data
-        application.full_name = temp_data.get('full_name', application.full_name)
-        application.email = temp_data.get('email', application.email)
-        application.phone_number = from_number  # Use the WhatsApp number as phone
-        application.cover_letter = temp_data.get('cover_letter', 'Please see attached CV for details')
-        application.cv_filename = filename
-        application.cv_original_filename = original_filename
-        application.conversation_state = STATE_COMPLETED
-        application.applied_at = datetime.utcnow()
+        # ONLY save application to database when it's complete with all data
+        # If this is still an incomplete application, create a new complete one
+        if not application.full_name or not application.email:
+            # Create a new complete application
+            complete_application = Application(
+                application_id=Application.generate_application_id(),
+                internship_id=application.internship_id,
+                whatsapp_number=from_number,
+                full_name=temp_data.get('full_name'),
+                email=temp_data.get('email'),
+                phone_number=from_number,
+                cover_letter=temp_data.get('cover_letter', 'Please see attached CV for details'),
+                cv_filename=filename,
+                cv_original_filename=original_filename,
+                conversation_state=STATE_COMPLETED,
+                applied_at=datetime.utcnow(),
+                temp_data={}
+            )
+            
+            # Delete the incomplete application if it was in database
+            if application.id:
+                db.session.delete(application)
+            
+            # Add the complete application
+            db.session.add(complete_application)
+            application = complete_application
+        else:
+            # Update existing application with completion data
+            application.full_name = temp_data.get('full_name', application.full_name)
+            application.email = temp_data.get('email', application.email)
+            application.phone_number = from_number
+            application.cover_letter = temp_data.get('cover_letter', 'Please see attached CV for details')
+            application.cv_filename = filename
+            application.cv_original_filename = original_filename
+            application.conversation_state = STATE_COMPLETED
+            application.applied_at = datetime.utcnow()
         
         # Final safety check - if still fallback data, log error
         if application.full_name == 'Name from CV' or 'pending.com' in application.email:

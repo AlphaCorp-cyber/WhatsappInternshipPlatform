@@ -38,6 +38,25 @@ def auto_deactivate_expired_internships():
         current_app.logger.error(f"Error auto-stopping applications for expired internships: {e}")
         db.session.rollback()
 
+def cleanup_incomplete_applications():
+    """Remove incomplete applications from database to keep admin dashboard clean"""
+    try:
+        # Delete applications that are not completed (incomplete conversation state)
+        incomplete_apps = Application.query.filter(
+            Application.conversation_state != 'completed'
+        ).all()
+        
+        if incomplete_apps:
+            for app in incomplete_apps:
+                db.session.delete(app)
+            
+            db.session.commit()
+            current_app.logger.info(f"Cleaned up {len(incomplete_apps)} incomplete applications")
+            
+    except Exception as e:
+        current_app.logger.error(f"Error cleaning up incomplete applications: {e}")
+        db.session.rollback()
+
 # Authentication routes
 @app.route('/health')
 def health_check():
@@ -96,10 +115,13 @@ def dashboard():
     # Auto-deactivate expired internships
     auto_deactivate_expired_internships()
     
+    # Clean up incomplete applications
+    cleanup_incomplete_applications()
+    
     total_internships = Internship.query.filter_by(is_active=True).count()
-    total_applications = Application.query.count()
-    pending_applications = Application.query.filter_by(status='pending').count()
-    recent_applications = Application.query.order_by(Application.applied_at.desc()).limit(5).all()
+    total_applications = Application.query.filter_by(conversation_state='completed').count()
+    pending_applications = Application.query.filter_by(status='pending', conversation_state='completed').count()
+    recent_applications = Application.query.filter_by(conversation_state='completed').order_by(Application.applied_at.desc()).limit(5).all()
     
     return render_template('dashboard.html',
                          total_internships=total_internships,
@@ -320,7 +342,11 @@ def applications():
     status = request.args.get('status')
     search = request.args.get('search', '')
     
-    query = Application.query
+    # Clean up incomplete applications first
+    cleanup_incomplete_applications()
+    
+    # Build query for applications - ONLY show completed applications
+    query = Application.query.filter_by(conversation_state='completed')
     
     if internship_id:
         query = query.filter_by(internship_id=internship_id)
