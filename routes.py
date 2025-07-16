@@ -611,8 +611,9 @@ def export_applications_zip(applications):
 @app.route('/webhook/whatsapp', methods=['GET', 'POST'])
 def whatsapp_webhook():
     if request.method == 'GET':
-        # For Twilio, this is typically not used, but keep for compatibility
-        return 'Webhook endpoint ready', 200, {'Content-Type': 'text/plain'}
+        # For Twilio webhook verification and status check
+        current_app.logger.info("WhatsApp webhook GET request - verification")
+        return 'WhatsApp webhook endpoint ready and accessible', 200, {'Content-Type': 'text/plain'}
     
     elif request.method == 'POST':
         # Handle incoming Twilio WhatsApp messages
