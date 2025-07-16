@@ -153,6 +153,7 @@ To receive real WhatsApp messages via Twilio, you need:
 
 ## Changelog
 
+- July 16, 2025: Added automatic internship deactivation after deadline passes with user notifications
 - July 16, 2025: Created shortlisted applicants dashboard with bulk WhatsApp messaging for interview notifications
 - July 16, 2025: Added auto-filtering functionality to admin dashboard - search filters automatically as you type
 - July 16, 2025: Enhanced status update notifications with emojis and personalized messages for accepted/rejected applicants

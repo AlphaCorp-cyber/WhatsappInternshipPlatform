@@ -165,7 +165,7 @@ def process_text_message(application, message_body, from_number):
         # If they send text instead of file, remind them
         send_whatsapp_message(
             from_number,
-            "📎 Please attach your **CV as a PDF document only** to complete your application."
+            "📎 Please attach your **CV as a PDF document only** to complete your application.\n\n💡 **Tip:** If you have a cover letter from your university or college, please include it with your CV document."
         )
 
 def handle_apply_command(application, message_body, from_number):
@@ -197,9 +197,13 @@ def handle_apply_command(application, message_body, from_number):
         return
     
     if internship.is_deadline_passed():
+        # Auto-deactivate the expired internship
+        internship.is_active = False
+        db.session.commit()
+        
         send_whatsapp_message(
             from_number,
-            f"Sorry, the application deadline for {internship.title} has passed."
+            f"⏰ Sorry, the application deadline for **{internship.title}** has passed.\n\nDeadline was: {internship.deadline.strftime('%B %d, %Y')}\n\nPlease check for other available opportunities."
         )
         return
     

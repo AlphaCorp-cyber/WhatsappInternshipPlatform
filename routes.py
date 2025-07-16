@@ -14,6 +14,29 @@ from utils import allowed_file, save_uploaded_file
 from communication import send_whatsapp_message, send_email, send_sms
 import whatsapp_handler
 
+def auto_deactivate_expired_internships():
+    """Automatically deactivate internships that have passed their deadline"""
+    try:
+        from datetime import datetime
+        
+        # Find all active internships that have passed their deadline
+        expired_internships = Internship.query.filter(
+            Internship.is_active == True,
+            Internship.deadline < datetime.utcnow()
+        ).all()
+        
+        if expired_internships:
+            for internship in expired_internships:
+                internship.is_active = False
+                current_app.logger.info(f"Auto-deactivated expired internship: {internship.title} (ID: {internship.id})")
+            
+            db.session.commit()
+            current_app.logger.info(f"Auto-deactivated {len(expired_internships)} expired internships")
+            
+    except Exception as e:
+        current_app.logger.error(f"Error auto-deactivating expired internships: {e}")
+        db.session.rollback()
+
 # Authentication routes
 @app.route('/health')
 def health_check():
@@ -69,6 +92,9 @@ def logout():
 @app.route('/')
 @login_required
 def dashboard():
+    # Auto-deactivate expired internships
+    auto_deactivate_expired_internships()
+    
     total_internships = Internship.query.filter_by(is_active=True).count()
     total_applications = Application.query.count()
     pending_applications = Application.query.filter_by(status='pending').count()
@@ -84,6 +110,9 @@ def dashboard():
 @app.route('/internships')
 @login_required
 def internships():
+    # Auto-deactivate expired internships
+    auto_deactivate_expired_internships()
+    
     page = request.args.get('page', 1, type=int)
     internships = Internship.query.filter_by(is_active=True).order_by(
         Internship.created_at.desc()).paginate(
