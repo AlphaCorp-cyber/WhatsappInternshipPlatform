@@ -155,7 +155,7 @@ To receive real WhatsApp messages via Twilio, you need:
 
 - July 16, 2025: Added auto-filtering functionality to admin dashboard - search filters automatically as you type
 - July 16, 2025: Enhanced status update notifications with emojis and personalized messages for accepted/rejected applicants
-- July 16, 2025: Fixed applicant data storage - real names and emails from WhatsApp now stored in database instead of fallback values
+- July 16, 2025: Fixed applicant data storage system - real names and emails from WhatsApp now immediately saved to database with commit points
 - July 16, 2025: Added unique application IDs for each user application (format: APP-YYYYMMDD-XXXX)
 - July 14, 2025: PDF-only document system with in-browser viewing and automatic file download
 - July 14, 2025: Fixed PDF upload recognition and CV file storage system

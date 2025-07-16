@@ -236,16 +236,19 @@ def handle_name_input(application, message_body, from_number):
         )
         return
     
-    # Store the actual name provided by user
+    # Store the actual name provided by user immediately
     application.full_name = message_body.strip()
     temp_data = application.temp_data or {}
     temp_data['full_name'] = message_body.strip()
     application.temp_data = temp_data
     application.conversation_state = STATE_WAITING_FOR_EMAIL
     
+    # Save to database immediately
+    db.session.commit()
+    
     send_whatsapp_message(
         from_number,
-        f"✅ Perfect {temp_data['full_name']}! \n\n📧 **Step 2:** Please provide your **email address**:"
+        f"✅ Perfect {message_body.strip()}! \n\n📧 **Step 2:** Please provide your **email address**:"
     )
 
 def handle_email_input(application, message_body, from_number):
@@ -260,12 +263,15 @@ def handle_email_input(application, message_body, from_number):
         )
         return
     
-    # Store the actual email provided by user
+    # Store the actual email provided by user immediately
     application.email = email
     temp_data = application.temp_data or {}
     temp_data['email'] = email
     application.temp_data = temp_data
     application.conversation_state = STATE_WAITING_FOR_CV
+    
+    # Save to database immediately
+    db.session.commit()
     
     send_whatsapp_message(
         from_number,
@@ -356,17 +362,20 @@ def process_media_message(application, whatsapp_msg, from_number):
             )
             return
         
-        # Complete the application with collected data
-        temp_data = application.temp_data or {}
-        
-        application.full_name = temp_data.get('full_name', 'Name from CV')
-        application.email = temp_data.get('email', f'applicant_{application.id}@pending.com')
-        application.phone_number = from_number
-        application.cover_letter = 'Please see attached CV for details'
+        # Complete the application - name and email should already be saved from earlier steps
+        # Just add the final CV and completion data
+        application.phone_number = from_number  # Use the WhatsApp number as phone
+        application.cover_letter = temp_data.get('cover_letter', 'Please see attached CV for details')
         application.cv_filename = filename
         application.cv_original_filename = original_filename
         application.conversation_state = STATE_COMPLETED
         application.applied_at = datetime.utcnow()
+        
+        # Ensure name and email are saved (fallback protection)
+        if not application.full_name or application.full_name == 'Name from CV':
+            application.full_name = temp_data.get('full_name', 'Name from CV')
+        if not application.email or 'pending.com' in application.email:
+            application.email = temp_data.get('email', f'applicant_{application.id}@pending.com')
         
         internship = Internship.query.get(application.internship_id)
         
